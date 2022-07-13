@@ -2,12 +2,13 @@
 pragma solidity >=0.8.13;
 
 import "../../lib/ds-test/test.sol";
-import "../../lib/utils/Console.sol";
+import "../../lib/forge-std/src/Test.sol";
 import "../../lib/utils/VyperDeployer.sol";
+
 
 import "../IVault.sol";
 
-contract VaultTest is DSTest {
+contract VaultTest is Test {
     ///@notice create a new instance of VyperDeployer
     VyperDeployer vyperDeployer = new VyperDeployer();
 
@@ -34,6 +35,7 @@ contract VaultTest is DSTest {
     }
 
     function test_setName() public {
+        vm.prank(governance);
         vault.setName('TestName');
 
         emit log_string(vault.name());
@@ -44,8 +46,6 @@ contract VaultTest is DSTest {
         //vault.setSymbol('TestSymbol');
         //require(compareStrings(vault.symbol(),'TestSymbol')); 
     }
-
-
 
     function compareStrings(string memory a, string memory b) public view returns (bool) {
         return (keccak256(abi.encodePacked((a))) == keccak256(abi.encodePacked((b))));
