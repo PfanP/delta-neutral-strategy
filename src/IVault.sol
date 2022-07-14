@@ -23,9 +23,24 @@ struct StrategyParams {
 }
 
 interface IVault {
+    function initialize(    
+        address token,
+        address governance,
+        address rewards,
+        string calldata nameOverride,
+        string calldata symbolOverride
+        //address guardian,
+        //address management,
+        //address healthCheck
+    ) external;
+
     function setSymbol(string calldata symbol) external;
 
     function setName(string calldata name) external;
+
+    function setDepositLimit(uint256 limit) external;
+
+    function returnShares(address user) external view returns (uint256);
 
     function name() external view returns (string calldata);
 

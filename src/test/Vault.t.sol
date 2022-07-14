@@ -6,33 +6,59 @@ import "../../lib/forge-std/src/Test.sol";
 import "../../lib/utils/VyperDeployer.sol";
 
 import "../IVault.sol";
+import "../Token.sol";
 
 contract VaultTest is Test {
     ///@notice create a new instance of VyperDeployer
     VyperDeployer vyperDeployer = new VyperDeployer();
 
     IVault vault;
+    Token testToken;
 
     // Init Params
-    address token = 0x0000000000000000000000000000000000000000;
-    address governance = 0x0000000000000000000000000000000000000000;
+    //address token = 0x0000000000000000000000000000000000000000;
+    address governance = 0x462a8BFFD42544eEE309c64104693b02051fe854;
     address rewards = 0x0000000000000000000000000000000000000000;
     string name = 'cVault';
     string symbol = 'cv';
 
     function setUp() public {
+        testToken = new Token();
+
+        //uint userBal = testToken.balanceOf(address(this));
+        //emit log_uint(userBal);
+
         vault = IVault(
-            vyperDeployer.deployContract("Vault", abi.encode(
-                token,
+            vyperDeployer.deployContract("Vault", abi.encode())
+        );
+
+        vault.initialize(
+                address(testToken),
                 governance,
                 rewards,
                 name,
                 symbol
-            ))
         );
 
+        //testToken.transfer(address(vault), 100e18);
+        //uint vaultBal = testToken.balanceOf(address(vault));
+        //emit log_uint(vaultBal);
     }
 
+    function test_deposit() public {
+        vm.prank(governance);
+        vault.setDepositLimit(90000e18);
+        // Set Vault allowance
+        testToken.approve(address(vault), type(uint256).max);
+
+        uint amount = 1000;
+        vault.deposit(amount);
+
+        emit log_uint(vault.returnShares(address(this)));
+    }
+
+
+/*
     function test_setName() public {
         vm.prank(governance);
         vault.setName('TestName');
@@ -47,7 +73,10 @@ contract VaultTest is Test {
         require(compareStrings(vault.symbol(),'TestSymbol')); 
     }
 
+    function test_withdraw() public {
 
+    }
+*/ 
 
 
 
