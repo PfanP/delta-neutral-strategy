@@ -90,6 +90,17 @@ struct StrategyParams:
     totalGain: uint256  # Total returns that Strategy has realized for Vault
     totalLoss: uint256  # Total losses that Strategy has realized for Vault
 
+# Debug events here
+event TestLogInt:
+    amount: uint256
+
+event TestLogAddr:
+    addr: indexed(address)
+
+event TestLogBool:
+    flag: bool
+
+
 event Transfer:
     sender: indexed(address)
     receiver: indexed(address)
@@ -864,6 +875,12 @@ def _issueSharesForAmount(to: address, amount: uint256) -> uint256:
     log Transfer(ZERO_ADDRESS, to, shares)
 
     return shares
+
+
+@view
+@external
+def returnShares(user: address) -> uint256:
+    return self.balanceOf[user]
 
 
 @external
