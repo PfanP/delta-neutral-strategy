@@ -72,7 +72,7 @@ interface IVault {
 
     function withdraw(uint256 maxShares) external returns (uint256);
 
-    function withdraw(uint256 maxShares, address recipient)
+    function withdraw(uint256 maxShares, address recipient, uint256 maxLoss)
         external
         returns (uint256);
 

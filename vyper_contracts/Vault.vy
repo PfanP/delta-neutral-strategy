@@ -876,7 +876,7 @@ def _issueSharesForAmount(to: address, amount: uint256) -> uint256:
 
     return shares
 
-
+# For debugging purposes
 @view
 @external
 def returnShares(user: address) -> uint256:
@@ -1043,7 +1043,7 @@ def withdraw(
     maxShares: uint256 = MAX_UINT256,
     recipient: address = msg.sender,
     maxLoss: uint256 = 1,  # 0.01% [BPS]
-) -> uint256:
+) -> uint256: 
     """
     @notice
         Withdraws the calling account's tokens from this Vault, redeeming
