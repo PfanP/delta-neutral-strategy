@@ -48,16 +48,23 @@ contract VaultTest is Test {
     function test_deposit() public {
         vm.prank(governance);
         vault.setDepositLimit(90000e18);
-        // Set Vault allowance
+        // Set Vault spend allowance 
         testToken.approve(address(vault), type(uint256).max);
 
-        uint amount = 1000;
+        uint amount = 1e18;
         vault.deposit(amount);
 
         emit log_uint(vault.returnShares(address(this)));
     }
 
+    function test_withdraw() public {
+        test_deposit();
 
+        uint maxShares = 1e17;
+        uint maxLoss = 1;
+        uint value = vault.withdraw(maxShares, msg.sender, maxLoss);
+        emit log_uint(value);
+    }
 /*
     function test_setName() public {
         vm.prank(governance);
@@ -71,10 +78,6 @@ contract VaultTest is Test {
         vault.setSymbol('TestSymbol');
         emit log_string(vault.symbol());
         require(compareStrings(vault.symbol(),'TestSymbol')); 
-    }
-
-    function test_withdraw() public {
-
     }
 */ 
 
