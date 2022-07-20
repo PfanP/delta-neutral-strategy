@@ -4,8 +4,10 @@ out = 'out'
 libs = ['lib']
 ffi = true
 remappings = [
-    'ds-test/=lib/ds-test/src/',
-    'openzeppelin-contracts/=lib/openzeppelin-contracts/',
-    'yearn-vaults'=lib/yearn-vaults/contracts/,
-    ]
+    'ds-test/=lib/ds-test/',
+    'forge-std/=lib/forge-std/src/',
+    '@yearnvaults/=lib/yearn-vaults/',
+    '@openzeppelin/=lib/openzeppelin-contracts/'
+]
 
+# See more config options https://github.com/gakonst/foundry/tree/master/config
