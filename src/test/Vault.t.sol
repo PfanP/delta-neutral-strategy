@@ -2,7 +2,8 @@
 pragma solidity >=0.8.13;
 
 //import "../../lib/ds-test/test.sol";
-import "../../lib/forge-std/src/Test.sol";
+import {Test} from "forge-std/Test.sol";
+import {Vm} from "forge-std/Vm.sol";
 import "../../utils/VyperDeployer.sol";
 import "../../contracts/Strategy.sol";
 

@@ -3,7 +3,7 @@
 pragma solidity 0.8.10;
 pragma experimental ABIEncoderV2;
 
-import {BaseStrategyInitializable} from "@yearnvaults/contracts/BaseStrategy.sol";
+import {BaseStrategyInitializable} from "./yearn/BaseStrategy.sol";
 // import {BaseStrategyInitializable} from "yearn-vaults/BaseStrategy.sol";
 
 contract StrategyIdle is BaseStrategyInitializable {
