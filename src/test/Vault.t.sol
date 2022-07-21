@@ -5,16 +5,16 @@ pragma solidity >=0.8.13;
 import {Test} from "forge-std/Test.sol";
 import {Vm} from "forge-std/Vm.sol";
 import "../../utils/VyperDeployer.sol";
-import "../../contracts/Strategy.sol";
+import "../contracts/Strategy.sol";
 
-import "../IVaultMock.sol";
+import "../interfaces/IVault.sol";
 import "../Token.sol";
 
 contract VaultTest is Test {
     ///@notice create a new instance of VyperDeployer
     VyperDeployer vyperDeployer = new VyperDeployer();
 
-    IVaultMock vault;
+    IVault vault;
     Token testToken;
 
     // Init Params
@@ -30,7 +30,7 @@ contract VaultTest is Test {
         //uint userBal = testToken.balanceOf(address(this));
         //emit log_uint(userBal);
 
-        vault = IVaultMock(
+        vault = IVault(
             vyperDeployer.deployContract("Vault", abi.encode())
         );
 

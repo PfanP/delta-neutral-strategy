@@ -1,28 +1,10 @@
 // SPDX-License-Identifier: MIT
 pragma solidity >=0.8.13;
 
+import {IERC20} from "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 import "../contracts/yearn/BaseStrategy.sol";
 
-interface IVaultMock {
-    function initialize(    
-        address token,
-        address governance,
-        address rewards,
-        string calldata nameOverride,
-        string calldata symbolOverride
-        //address guardian,
-        //address management,
-        //address healthCheck
-    ) external;
-
-    function setSymbol(string calldata symbol) external;
-
-    function setName(string calldata name) external;
-
-    function setDepositLimit(uint256 limit) external;
-
-    function returnShares(address user) external view returns (uint256);
-
+interface IVault is IERC20 {
     function name() external view returns (string calldata);
 
     function symbol() external view returns (string calldata);
@@ -39,6 +21,36 @@ interface IVaultMock {
         bytes calldata signature
     ) external returns (bool);
 
+    function initialize(
+        address token,
+        address governance,
+        address rewards,
+        string memory name,
+        string memory symbol
+    ) external;
+
+    function initialize(
+        address token,
+        address governance,
+        address rewards,
+        string memory name,
+        string memory symbol,
+        address guardian,
+        address management
+    ) external;
+
+    function addStrategy(
+        address _strategy,
+        uint256 _debtRatio,
+        uint256 _minDebtPerHarvest,
+        uint256 _maxDebtPerHarvest,
+        uint256 _performanceFee
+    ) external;
+
+    function setDepositLimit(uint256 amount) external;
+
+    function returnShares(address user) external view returns (uint256);
+
     // NOTE: Vyper produces multiple signatures for a given function with "default" args
     function deposit() external returns (uint256);
 
@@ -53,7 +65,7 @@ interface IVaultMock {
 
     function withdraw(uint256 maxShares) external returns (uint256);
 
-    function withdraw(uint256 maxShares, address recipient, uint256 maxLoss)
+    function withdraw(uint256 maxShares, address recipient)
         external
         returns (uint256);
 
@@ -86,6 +98,8 @@ interface IVaultMock {
      */
     function debtOutstanding() external view returns (uint256);
 
+    function debtOutstanding(address _strategy) external view returns (uint256);
+
     /**
      * View how much the Vault expect this Strategy to return at the current
      * block, based on its present performance (since its last report). Can be
@@ -116,6 +130,23 @@ interface IVaultMock {
      * external dependency.
      */
     function revokeStrategy() external;
+
+    function revokeStrategy(address strategy) external;
+
+    function migrateStrategy(address oldVersion, address newVersion) external;
+
+    function setEmergencyShutdown(bool active) external;
+
+    function setManagementFee(uint256 fee) external;
+
+    function updateStrategyDebtRatio(address strategy, uint256 debtRatio)
+        external;
+
+    function withdraw(
+        uint256 maxShare,
+        address recipient,
+        uint256 maxLoss
+    ) external returns (uint256);
 
     /**
      * View the governance address of the Vault to assert privileged functions
