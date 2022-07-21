@@ -1,28 +1,9 @@
 // SPDX-License-Identifier: MIT
 pragma solidity >=0.8.13;
 
-struct StrategyParams {
-    uint256 performanceFee;
-    uint256 activation;
-    uint256 debtRatio;
-    uint256 minDebtPerHarvest;
-    uint256 maxDebtPerHarvest;
-    uint256 lastReport;
-    uint256 totalDebt;
-    uint256 totalGain;
-    uint256 totalLoss;
-    // performanceFee: uint256  # Strategist's fee (basis points)
-    // activation: uint256  # Activation block.timestamp
-    // debtRatio: uint256  # Maximum borrow amount (in BPS of total assets)
-    // minDebtPerHarvest: uint256  # Lower limit on the increase of debt since last harvest
-    // maxDebtPerHarvest: uint256  # Upper limit on the increase of debt since last harvest
-    // lastReport: uint256  # block.timestamp of the last time a report occured
-    // totalDebt: uint256  # Total outstanding debt that Strategy has
-    // totalGain: uint256  # Total returns that Strategy has realized for Vault
-    // totalLoss: uint256  # Total losses that Strategy has realized for Vault
-}
+import "../contracts/yearn/BaseStrategy.sol";
 
-interface IVault {
+interface IVaultMock {
     function initialize(    
         address token,
         address governance,

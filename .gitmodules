@@ -1,6 +1,3 @@
-[submodule "lib/yearn-vaults"]
-	path = lib/yearn-vaults
-	url = https://github.com/yearn/yearn-vaults
 [submodule "lib/forge-std"]
 	path = lib/forge-std
 	url = https://github.com/foundry-rs/forge-std

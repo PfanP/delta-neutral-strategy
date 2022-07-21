@@ -6,7 +6,7 @@ ffi = true
 remappings = [
     'ds-test/=lib/ds-test/',
     'forge-std/=lib/forge-std/src/',
-    '@yearnvaults/=lib/yearn-vaults/',
+    # '@yearnvaults/=lib/yearn-vaults/',
     '@openzeppelin/=lib/openzeppelin-contracts/'
 ]
 
