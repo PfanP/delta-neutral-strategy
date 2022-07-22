@@ -24,8 +24,8 @@ contract Strategy is BaseStrategy {
     address private token0;
     address private token1;
     uint private farmLeverage;
-    uint private pid0;
-    uint private pid1;
+    uint private posId0;
+    uint private posId1;
 
     // solhint-disable-next-line no-empty-blocks
     constructor(
@@ -43,8 +43,8 @@ contract Strategy is BaseStrategy {
         token1 = _token1;
         farmLeverage = _farmLeverage;
         homoraFarmHandler = _homoraFarmHandler;
-        pid0 = 0;
-        pid1 = 0;
+        posId0 = 0;
+        posId1 = 0;
     }
 
     // ******** OVERRIDE THESE METHODS FROM BASE CONTRACT ************
@@ -74,6 +74,7 @@ contract Strategy is BaseStrategy {
         // NOTE: Should try to free up at least `_debtOutstanding` of underlying position
     }
 
+    // ********* For Homora - Sushiswap ********** 
     // solhint-disable-next-line no-empty-blocks
     function adjustPosition(uint256 _debtOutstanding) internal override {
         // TODO: Do something to invest excess `want` tokens (from the Vault) into your positions
@@ -92,29 +93,38 @@ contract Strategy is BaseStrategy {
         uint pos0AddTokens = freeTokens / 2; // a temp calc
         uint pos1AddTokens = freeTokens / 2; // a temp calc
 
+        uint pos0borrowToken0 = 0;
+        uint pos0borrowToken1 = 0;
+        uint pos1borrowToken0 = 0;
+        uint pos1borrowToken1 = 0;   
+
         // Position One
         IHomoraFarmHandler(homoraFarmHandler).openOrIncreasePositionSushiswap(
-                pid0, 
+                posId0, 
                 token0,
                 token1,
                 pos0AddTokens, // amountToken0
                 0, // amountToken1 will be 0
-                _borrowAmtToken0,
-                _borrowAmtToken1,
-                0 // 0 PID seems to work but needs more testing
+                0, // 0 LP Supplied
+                pos0borrowToken0,
+                pos0borrowToken1,
+                0 // Need to place in the Sushiswap PID
         );
 
         // Position Two
         IHomoraFarmHandler(homoraFarmHandler).openOrIncreasePositionSushiswap(
-                pid1, 
+                posId1, 
                 token0,
                 token1,
                 pos1AddTokens,
                 0,
-                _borrowAmtToken0,
-                _borrowAmtToken1,
+                0,
+                pos1borrowToken0,
+                pos1borrowToken1,
                 0 // 0 PID seems to work but needs more testing
         );
+
+        // Need to get the return of the Position ID from Homora Farm
 
     }
 

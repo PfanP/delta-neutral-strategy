@@ -6,6 +6,16 @@ pragma solidity ^0.8.0;
 interface IHomoraFarmHandler {
     /// @notice
     /// @param 
-    function openOrIncreasePositionSushiswap(uint256 positionID, address token0, address token1, uint256 supplyToken0, uint256 supplyToken1, uint256 supplyLp, uint256 borrowToken0, uint256 borrowToken1, uint256 pid) external;
+    function openOrIncreasePositionSushiswap(
+        uint256 positionID, 
+        address token0, 
+        address token1, 
+        uint256 supplyToken0,
+        uint256 supplyToken1, 
+        uint256 supplyLp, 
+        uint256 borrowToken0,
+        uint256 borrowToken1, 
+        uint256 pid
+    ) external;
     
 }
