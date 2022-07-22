@@ -29,22 +29,23 @@ contract Strategy is BaseStrategy {
 
     // solhint-disable-next-line no-empty-blocks
     constructor(
-        address _vault,
-        address _token0,
-        address _token1,
-        uint _farmLeverage,
-        address _homoraFarmHandler
+        address _vault
+        //address _token0,
+        ///address _token1,
+        ///uint _farmLeverage,
+        //address _homoraFarmHandler
     ) BaseStrategy(_vault) {
         // You can set these parameters on deployment to whatever you want
         // maxReportDelay = 6300;
         // profitFactor = 100;
         // debtThreshold = 0;
+        /*
         token0 = _token0;
         token1 = _token1;
         farmLeverage = _farmLeverage;
         homoraFarmHandler = _homoraFarmHandler;
         posId0 = 0;
-        posId1 = 0;
+        posId1 = 0;*/ 
     }
 
     // ******** OVERRIDE THESE METHODS FROM BASE CONTRACT ************
@@ -74,6 +75,8 @@ contract Strategy is BaseStrategy {
         // NOTE: Should try to free up at least `_debtOutstanding` of underlying position
     }
 
+    // Add: Function to change the farm leverage // TODO 
+
     // ********* For Homora - Sushiswap ********** 
     // solhint-disable-next-line no-empty-blocks
     function adjustPosition(uint256 _debtOutstanding) internal override {
@@ -100,7 +103,12 @@ contract Strategy is BaseStrategy {
 
         // Manage the allowances of this contract to Homora Farm Handler
 
-        // Position One
+        // Example: 1000 DAI: Token0 |  ETH: Token1
+        // The base is the long position ()
+
+        // 250 DAI Supply here
+        // Borrrow: 3x on 250 on the token0
+        // Position One: Long
         IHomoraFarmHandler(homoraFarmHandler).openOrIncreasePositionSushiswap(
                 posId0, 
                 token0,
@@ -109,11 +117,15 @@ contract Strategy is BaseStrategy {
                 0, // amountToken1 will be 0
                 0, // 0 LP Supplied
                 pos0borrowToken0,
-                pos0borrowToken1,
+                pos0borrowToken1, // Will be 0
                 0 // Need to place in the Sushiswap PID
         );
+        // Rebalancing: Say Eth price goes up
+        // This farm is underlevereaged now
 
-        // Position Two
+        // 750 DAI Supply here
+        // Borrow: 3x on 750 on the token1
+        // Position Two: Short
         IHomoraFarmHandler(homoraFarmHandler).openOrIncreasePositionSushiswap(
                 posId1, 
                 token0,
@@ -121,10 +133,22 @@ contract Strategy is BaseStrategy {
                 pos1AddTokens,
                 0,
                 0,
-                pos1borrowToken0,
+                pos1borrowToken0, // Will be 0
                 pos1borrowToken1,
                 0 // 0 PID seems to work but needs more testing
         );
+        // This farm is overleveraged in the case ETH price goes up
+        // Need to move funds from this position into long position 
+        // Harvesting: 2 goals: (1) Maintain ratio of the base assets in the positions
+        // (2) Maintain the farm leverage
+        // Rebalance action: (1) Pull liquidity from one farm and deposit in other
+        // (2) Take out loans in the one that got liquidity pulled
+        // NOTE: If possible, reduce the underleverage farm supply without 
+        // Paying the loan back. This will reduce number of actions. 
+        // 
+        // Rebalance trigger conditions on chain
+        // Rebalance calcs & mechanism also on chain
+        // Condition detection can happen off chain in a bot
 
         // Need to get the return of the Position ID from Homora Farm
 
