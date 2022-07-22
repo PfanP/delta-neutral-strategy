@@ -6,6 +6,7 @@ pragma experimental ABIEncoderV2;
 
 // These are the core Yearn libraries
 import {BaseStrategy, StrategyParams} from "./yearn/BaseStrategy.sol";
+import "../interfaces/IHomoraFarmHandler.sol";
 
 import {Address} from "@openzeppelin/contracts/utils/Address.sol";
 import {IERC20} from "@openzeppelin/contracts/token/ERC20/IERC20.sol";
@@ -18,12 +19,32 @@ contract Strategy is BaseStrategy {
     using SafeERC20 for IERC20;
     using Address for address;
 
+    // The token pairs which will go into the Homora Farm
+    address public homoraFarmHandler;
+    address private token0;
+    address private token1;
+    uint private farmLeverage;
+    uint private pid0;
+    uint private pid1;
+
     // solhint-disable-next-line no-empty-blocks
-    constructor(address _vault) BaseStrategy(_vault) {
+    constructor(
+        address _vault,
+        address _token0,
+        address _token1,
+        uint _farmLeverage,
+        address _homoraFarmHandler
+    ) BaseStrategy(_vault) {
         // You can set these parameters on deployment to whatever you want
         // maxReportDelay = 6300;
         // profitFactor = 100;
         // debtThreshold = 0;
+        token0 = _token0;
+        token1 = _token1;
+        farmLeverage = _farmLeverage;
+        homoraFarmHandler = _homoraFarmHandler;
+        pid0 = 0;
+        pid1 = 0;
     }
 
     // ******** OVERRIDE THESE METHODS FROM BASE CONTRACT ************
@@ -57,6 +78,44 @@ contract Strategy is BaseStrategy {
     function adjustPosition(uint256 _debtOutstanding) internal override {
         // TODO: Do something to invest excess `want` tokens (from the Vault) into your positions
         // NOTE: Try to adjust positions so that `_debtOutstanding` can be freed up on *next* harvest (not immediately)
+        
+        // Balance of the free tokens in the strategy
+        uint256 freeTokens = want.balanceOf(address(this));
+
+
+        // Need two variables in this strategy to keep track of the positions ids
+        // 2 DN positions needed to maintain DN neutrality
+
+        // Need to calc the borrow amount from the farm leverage
+        // Need to calc the amount that goes into each DN position 
+
+        uint pos0AddTokens = freeTokens / 2; // a temp calc
+        uint pos1AddTokens = freeTokens / 2; // a temp calc
+
+        // Position One
+        IHomoraFarmHandler(homoraFarmHandler).openOrIncreasePositionSushiswap(
+                pid0, 
+                token0,
+                token1,
+                pos0AddTokens, // amountToken0
+                0, // amountToken1 will be 0
+                _borrowAmtToken0,
+                _borrowAmtToken1,
+                0 // 0 PID seems to work but needs more testing
+        );
+
+        // Position Two
+        IHomoraFarmHandler(homoraFarmHandler).openOrIncreasePositionSushiswap(
+                pid1, 
+                token0,
+                token1,
+                pos1AddTokens,
+                0,
+                _borrowAmtToken0,
+                _borrowAmtToken1,
+                0 // 0 PID seems to work but needs more testing
+        );
+
     }
 
     function liquidatePosition(uint256 _amountNeeded)
@@ -138,4 +197,5 @@ contract Strategy is BaseStrategy {
         // TODO create an accurate price oracle
         return _amtInWei;
     }
+
 }
