@@ -18,4 +18,8 @@ interface IHomoraFarmHandler {
         uint256 pid
     ) external;
     
+    function harvestSushiswap(
+        uint256 positionId
+     ) external;
+
 }

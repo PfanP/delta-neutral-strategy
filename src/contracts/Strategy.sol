@@ -98,6 +98,8 @@ contract Strategy is BaseStrategy {
         uint pos1borrowToken0 = 0;
         uint pos1borrowToken1 = 0;   
 
+        // Manage the allowances of this contract to Homora Farm Handler
+
         // Position One
         IHomoraFarmHandler(homoraFarmHandler).openOrIncreasePositionSushiswap(
                 posId0, 
