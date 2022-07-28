@@ -23,7 +23,7 @@ interface IHomoraFarmHandler {
     /// @dev Return position information for the given position id.
     /// @param positionId The position id to query for position information.
     function getPositionInfo(uint256 positionId)
-        public
+        external
         view
         returns (
             address owner,
