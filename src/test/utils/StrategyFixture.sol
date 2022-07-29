@@ -105,7 +105,6 @@ contract StrategyFixture is ExtendedTest {
         address _guardian,
         address _management
     ) public returns (address) {
-        vm.prank(_gov);
         address _vaultAddress = deployCode(vaultArtifact);
         IVault _vault = IVault(_vaultAddress);
 
@@ -155,7 +154,7 @@ contract StrategyFixture is ExtendedTest {
             _management
         );
         IVault _vault = IVault(_vaultAddr);
-
+        
         vm.prank(_strategist);
         _strategyAddr = deployStrategy(_vaultAddr);
         Strategy _strategy = Strategy(_strategyAddr);
