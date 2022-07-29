@@ -4,6 +4,10 @@
 pragma solidity ^0.8.12;
 pragma experimental ABIEncoderV2;
 
+// DN Math Library
+import {DeltaNeutralMathLib} from "../../lib/dn-chad-math/DeltaNeutralMathLib.sol";
+import {DeltaNeutralMetadata} from "../../lib/dn-chad-math/DeltaNeutralMathLib.sol";
+
 // These are the core Yearn libraries
 import {BaseStrategy, StrategyParams} from "./yearn/BaseStrategy.sol";
 import "../interfaces/IHomoraFarmHandler.sol";
@@ -18,6 +22,7 @@ import {SafeERC20} from "@openzeppelin/contracts/token/ERC20/utils/SafeERC20.sol
 contract Strategy is BaseStrategy {
     using SafeERC20 for IERC20;
     using Address for address;
+    using DeltaNeutralMathLib for DeltaNeutralMetadata;
 
     // The token pairs which will go into the Homora Farm
     address public homoraFarmHandler;
@@ -82,51 +87,63 @@ contract Strategy is BaseStrategy {
         
         // Balance of the free tokens in the strategy
         uint256 freeTokens = want.balanceOf(address(this));
+        // Call a harvest and add the harvest to the free token balance
 
+        // Get these values all from a homora view function
+        uint longEquityValue;
+        uint longLoanValue;
+        uint shortEquityValue;
+        uint shortLoanValue; 
+        uint harvestValue; 
 
-        // Need two variables in this strategy to keep track of the positions ids
-        // 2 DN positions needed to maintain DN neutrality
+        DeltaNeutralMetadata memory data = DeltaNeutralMetadata(
+            longEquityValue,
+            longLoanValue,
+            shortEquityValue,
+            shortLoanValue,
+            harvestValue,
+            farmLeverage
+        );
 
-        // Need to calc the borrow amount from the farm leverage
-        // Need to calc the amount that goes into each DN position 
-
-        uint pos0AddTokens = freeTokens / 2; // a temp calc
-        uint pos1AddTokens = freeTokens / 2; // a temp calc
-
-        uint pos0borrowToken0 = 0;
-        uint pos0borrowToken1 = 0;
-        uint pos1borrowToken0 = 0;
-        uint pos1borrowToken1 = 0;   
+        uint desiredAdjustment = data.getDesiredAdjustment();
+        uint pos0AddToken0 = data.getLongEquityAdd(desiredAdjustment);
+        uint pos0BorrowToken0 = data.getLongLoanAdd(desiredAdjustment);
+        uint pos1AddToken0 = data.getShortEquityAdd(desiredAdjustment);
+        uint pos1BorrowToken1 = data.getShortLoanAdd(desiredAdjustment);
 
         // Manage the allowances of this contract to Homora Farm Handler
 
         // Position One
-        IHomoraFarmHandler(homoraFarmHandler).openOrIncreasePositionSushiswap(
+        uint position0Id = IHomoraFarmHandler(homoraFarmHandler).openOrIncreasePositionSushiswap(
                 posId0, 
                 token0,
                 token1,
-                pos0AddTokens, // amountToken0
+                pos0AddToken0, // amountToken0
                 0, // amountToken1 will be 0
                 0, // 0 LP Supplied
-                pos0borrowToken0,
-                pos0borrowToken1,
-                0 // Need to place in the Sushiswap PID
+                pos0BorrowToken0,
+                0, // 0 Borrrow of token1
+                0 // Place in the Sushiswap PID
         );
 
         // Position Two
-        IHomoraFarmHandler(homoraFarmHandler).openOrIncreasePositionSushiswap(
+        uint position1Id = IHomoraFarmHandler(homoraFarmHandler).openOrIncreasePositionSushiswap(
                 posId1, 
                 token0,
                 token1,
-                pos1AddTokens,
+                pos1AddToken0,
                 0,
-                0,
-                pos1borrowToken0,
-                pos1borrowToken1,
-                0 // 0 PID seems to work but needs more testing
+                0, // 0 Supply of LP
+                0, // 0 Borrow of token0
+                pos1BorrowToken1,
+                0 // Place in the Sushiswap PID
         );
 
-        // Need to get the return of the Position ID from Homora Farm
+        // Update the position IDs if opening new DN positions
+        if (posId0 == 0 && posId1 == 0) {
+            posId0 = position0Id;
+            posId1 = position1Id;
+        } 
 
     }
 
