@@ -16,7 +16,7 @@ interface IHomoraFarmHandler {
         uint256 borrowToken0,
         uint256 borrowToken1,
         uint256 pid
-    ) external;
+    ) external returns(uint256 homoraPositionID);
 
     function harvestSushiswap(uint256 positionId) external;
 
