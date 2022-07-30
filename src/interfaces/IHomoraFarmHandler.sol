@@ -77,4 +77,12 @@ interface IHomoraFarmHandler {
         external
         view
         returns (uint256);
+    
+    /// @dev Return the total collateral value of the given position in ETH.
+    /// @param positionId The position ID to query for the collateral value.
+    function getCollateralETHValue(uint positionId) external view returns (uint);
+
+    /// @dev Return the total borrow value of the given position in ETH.
+    /// @param positionId The position ID to query for the borrow value.
+    function getBorrowETHValue(uint positionId) external view returns (uint);
 }
