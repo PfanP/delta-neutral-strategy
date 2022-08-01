@@ -109,13 +109,17 @@ contract Strategy is BaseStrategy {
         );
 
         uint desiredAdjustment = data.getDesiredAdjustment();
-        uint pos0AddToken0 = data.getLongEquityAdd(desiredAdjustment);
-        uint pos0BorrowToken0 = data.getLongLoanAdd(desiredAdjustment);
-        uint pos1AddToken0 = data.getShortEquityAdd(desiredAdjustment);
-        uint pos1BorrowToken1 = data.getShortLoanAdd(desiredAdjustment);
+        uint pos0AddToken0 = data.longEquityRebalance(desiredAdjustment);
+        uint pos0BorrowToken0 = data.longLoanRebalance(desiredAdjustment);
+        uint pos1AddToken0 = data.shortEquityRebalance(desiredAdjustment);
+        uint pos1BorrowToken1 = data.shortLoanRebalance(desiredAdjustment);
 
         // Manage the allowances of this contract to Homora Farm Handler
 
+        // Call Reduce Position
+
+
+        // Call Add Position~
         // Position One
         uint position0Id = IHomoraFarmHandler(homoraFarmHandler).openOrIncreasePositionSushiswap(
                 posId0, 

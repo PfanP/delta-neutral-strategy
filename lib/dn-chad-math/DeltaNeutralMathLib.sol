@@ -26,7 +26,9 @@ library DeltaNeutralMathLib {
         return (data.longEquityValue + data.shortEquityValue + data.harvestValue).divWad(1e18 + data.leverageValue);
     }
     
-    // Harvest Specific Math
+    /////////////////////////////////////////
+    ////////// Harvesting Math //////////////
+    /////////////////////////////////////////
 
     function getLongEquityAdd(
         DeltaNeutralMetadata memory data,
@@ -105,7 +107,7 @@ library DeltaNeutralMathLib {
     }
 
     //////////////////////////////////////////////
-    // Rebalancing Math
+    ////////// Rebalancing Math //////////////////
     //////////////////////////////////////////////
 
     function longEquityRebalance(
