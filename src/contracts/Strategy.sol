@@ -29,8 +29,8 @@ contract Strategy is BaseStrategy {
     address private token0;
     address private token1;
     uint private farmLeverage;
-    uint private posId0;
-    uint private posId1;
+    uint private longPositionId;
+    uint private shortPositionId;
 
     // solhint-disable-next-line no-empty-blocks
     constructor(
@@ -109,26 +109,26 @@ contract Strategy is BaseStrategy {
         );
 
         uint desiredAdjustment = data.getDesiredAdjustment();
-        uint pos0AddToken0 = data.longEquityRebalance(desiredAdjustment);
-        uint pos0BorrowToken0 = data.longLoanRebalance(desiredAdjustment);
-        uint pos1AddToken0 = data.shortEquityRebalance(desiredAdjustment);
-        uint pos1BorrowToken1 = data.shortLoanRebalance(desiredAdjustment);
+        uint longPositionEquityAdd = data.longEquityRebalance(desiredAdjustment);
+        uint longPositionBorrowAdd = data.longLoanRebalance(desiredAdjustment);
+        uint shortPositionEquityAdd = data.shortEquityRebalance(desiredAdjustment);
+        uint shortPositionLoanAdd = data.shortLoanRebalance(desiredAdjustment);
 
         // Manage the allowances of this contract to Homora Farm Handler
 
         // Call Reduce Position
 
 
-        // Call Add Position~
-        // Position One
-        uint position0Id = IHomoraFarmHandler(homoraFarmHandler).openOrIncreasePositionSushiswap(
-                posId0, 
+        // Call Add Position
+        // Position Long
+        uint longPositionIdReturn = IHomoraFarmHandler(homoraFarmHandler).openOrIncreasePositionSushiswap(
+                longPositionId, 
                 token0,
                 token1,
-                pos0AddToken0, // amountToken0
+                longPositionEquityAdd, // amountToken0
                 0, // amountToken1 will be 0
                 0, // 0 LP Supplied
-                pos0BorrowToken0,
+                longPositionBorrowAdd,
                 0, // 0 Borrrow of token1
                 0 // Place in the Sushiswap PID
         );
@@ -136,15 +136,15 @@ contract Strategy is BaseStrategy {
         // This farm is underlevereaged now
 
         // Position Two
-        uint position1Id = IHomoraFarmHandler(homoraFarmHandler).openOrIncreasePositionSushiswap(
-                posId1, 
+        uint shortPositionIdReturn = IHomoraFarmHandler(homoraFarmHandler).openOrIncreasePositionSushiswap(
+                shortPositionId, 
                 token0,
                 token1,
-                pos1AddToken0,
+                shortPositionEquityAdd,
                 0,
                 0, // 0 Supply of LP
                 0, // 0 Borrow of token0
-                pos1BorrowToken1,
+                shortPositionLoanAdd,
                 0 // Place in the Sushiswap PID
         );
         // This farm is overleveraged in the case ETH price goes up
@@ -161,9 +161,9 @@ contract Strategy is BaseStrategy {
         // Condition detection can happen off chain in a bot
 
         // Update the position IDs if opening new DN positions
-        if (posId0 == 0 && posId1 == 0) {
-            posId0 = position0Id;
-            posId1 = position1Id;
+        if (longPositionId == 0 && shortPositionId == 0) {
+            longPositionId = longPositionIdReturn;
+            shortPositionId = shortPositionIdReturn;
         } 
 
     }
