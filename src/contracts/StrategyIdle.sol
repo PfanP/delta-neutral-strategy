@@ -294,6 +294,15 @@ contract StrategyIdle is BaseStrategyInitializable {
         }
     }
 
+    function addToPosition(uint256 _debtOutstanding) internal override {
+        // NOTE: Try to adjust positions so that `_debtOutstanding` can be freed up on *next* harvest (not immediately)
+
+        uint256 wantBal = _balance(want);
+        if (wantBal > _debtOutstanding) {
+            _invest(wantBal - _debtOutstanding); // no underflow
+        }
+    }
+
     /**
      * Liquidate up to `_amountNeeded` of `want` of this strategy's positions,
      * irregardless of slippage. Any excess will be re-invested with `adjustPosition()`.
