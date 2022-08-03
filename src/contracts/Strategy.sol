@@ -89,7 +89,7 @@ contract Strategy is BaseStrategy {
         // NOTE: Try to adjust positions so that `_debtOutstanding` can be freed up on *next* harvest (not immediately)
         
         // Balance of the free tokens in the strategy
-        uint256 freeTokens = want.balanceOf(address(this));
+        // uint256 freeTokens = want.balanceOf(address(this));
         // Call a harvest and add the harvest to the free token balance
 
         // Get these values all from a homora view function
@@ -109,10 +109,10 @@ contract Strategy is BaseStrategy {
         );
 
         uint desiredAdjustment = data.getDesiredAdjustment();
-        uint longPositionEquityAdd = data.longEquityRebalance(desiredAdjustment);
-        uint longPositionBorrowAdd = data.longLoanRebalance(desiredAdjustment);
-        uint shortPositionEquityAdd = data.shortEquityRebalance(desiredAdjustment);
-        uint shortPositionLoanAdd = data.shortLoanRebalance(desiredAdjustment);
+        (uint longPositionEquityAdd,) = data.longEquityRebalance(desiredAdjustment);
+        (uint longPositionBorrowAdd,) = data.longLoanRebalance(desiredAdjustment);
+        (uint shortPositionEquityAdd,) = data.shortEquityRebalance(desiredAdjustment);
+        (uint shortPositionLoanAdd,) = data.shortLoanRebalance(desiredAdjustment);
 
         // Manage the allowances of this contract to Homora Farm Handler
 
