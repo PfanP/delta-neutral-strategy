@@ -1,5 +1,7 @@
   // SPDX-License-Identifier: GPL-3.0
   pragma solidity >=0.7.0 <0.9.0;
+
+  import {IWMasterChef} from "./IWMasterChef.sol";
     
   interface IHomoraSushiSpell {
 
@@ -37,5 +39,5 @@
     function werc20() external returns (address);
     function weth() external returns (address);
     function whitelistedLpTokens(address) external returns (bool);
-    function wmasterchef() external returns (address);
+    function wmasterchef() external view returns (IWMasterChef);
 }

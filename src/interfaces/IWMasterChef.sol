@@ -1,21 +1,32 @@
-  // SPDX-License-Identifier: GPL-3.0
-  pragma solidity >=0.7.0 <0.9.0;
+// SPDX-License-Identifier: MIT
 
-  interface IWMasterchef {
-    function balanceOf(address, uint256) external returns (uint256);
-    function balanceOfBatch(address[] memory, uint256[] memory) external returns (uint256[] memory);
-    function burn(uint256, uint256) external returns (uint256);
-    function chef() external returns (address);
-    function decodeId(uint256) external returns (uint256, uint256);
-    function encodeId(uint256, uint256) external returns (uint256);
-    function getUnderlyingRate(uint256) external returns (uint256);
-    function getUnderlyingToken(uint256) external returns (address);
-    function isApprovedForAll(address, address) external returns (bool);
-    function mint(uint256, uint256) external returns (uint256);
-    function safeBatchTransferFrom(address, address, uint256[] memory , uint256[] memory, bytes calldata) external;
-    function safeTransferFrom(address, address, uint256, uint256, bytes calldata) external;
-    function setApprovalForAll(address, bool) external;
-    function supportsInterface(bytes4) external returns (bool);
-    function sushi() external returns (address);
-    function uri(uint256) external returns (string memory);
+pragma solidity ^0.8.13;
+pragma experimental ABIEncoderV2;
+
+import '@openzeppelin/contracts/token/ERC1155/IERC1155.sol';
+import '@openzeppelin/contracts/token/ERC20/IERC20.sol';
+
+import {IERC20Wrapper} from './IERC20Wrapper.sol';
+import {IMasterChef} from './IMasterChef.sol';
+
+// Info of each pool.
+struct PoolInfo {
+  IERC20 lpToken; // Address of LP token contract.
+  uint allocPoint; // How many allocation points assigned to this pool. SUSHIs to distribute per block.
+  uint lastRewardBlock; // Last block number that SUSHIs distribution occurs.
+  uint accSushiPerShare; // Accumulated SUSHIs per share, times 1e12. See below.
+}
+
+interface IWMasterChef is IERC1155, IERC20Wrapper {
+  /// @dev Mint ERC1155 token for the given ERC20 token.
+  function mint(uint pid, uint amount) external returns (uint id);
+
+  /// @dev Burn ERC1155 token to redeem ERC20 token back.
+  function burn(uint id, uint amount) external returns (uint pid);
+
+  function sushi() external returns (IERC20);
+
+  function decodeId(uint id) external pure returns (uint, uint);
+
+  function chef() external view returns (IMasterChef);
 }
