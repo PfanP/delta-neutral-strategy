@@ -2,10 +2,10 @@
 pragma solidity ^0.8.13;
 pragma experimental ABIEncoderV2;
 
-import "../../interfaces/homora/IHomoraBank.sol";
+import "../../interfaces/IHomoraBank.sol";
 import '@openzeppelin/contracts/token/ERC20/IERC20.sol';
-import '../../interfaces/uniswap/IWMasterChef.sol';
-import '../../interfaces/uniswap/IHomoraSushiSpell.sol';
+import '../../interfaces/IWMasterChef.sol';
+import '../../interfaces/IHomoraSushiSpell.sol';
 import {DopeAssMathLib} from "../../../lib/dn-chad-math/DopeAssMathLib.sol";
 
 
