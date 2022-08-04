@@ -85,4 +85,8 @@ interface IHomoraFarmHandler {
     /// @dev Return the total borrow value of the given position in ETH.
     /// @param positionId The position ID to query for the borrow value.
     function getBorrowETHValue(uint positionId) external view returns (uint);
+
+    /// @dev Return the value of the given input as ETH per unit, multiplied by 2**112.
+    /// @param token The ERC-20 token to check the value.
+    function getETHPx(address token) external view returns (uint)
 }

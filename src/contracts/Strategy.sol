@@ -239,7 +239,13 @@ contract Strategy is BaseStrategy, HomoraFarmHandler {
         uint longLoanValue;
         uint shortEquityValue;
         uint shortLoanValue; 
-        uint harvestValue; 
+        uint256 harvestValue = (IHomoraFarmHandler(homoraFarmHandler)
+            .getPendingRewardForSushiswap(longPositionId) +
+            IHomoraFarmHandler(homoraFarmHandler).getPendingRewardForSushiswap(
+                    shortPositionId
+                ) +
+            want.balanceOf(address(this))) *
+            IHomoraFarmHandler(homoraFarmHandler).getETHPx(address(want));
 
         DeltaNeutralMetadata memory data = DeltaNeutralMetadata(
             longEquityValue,
