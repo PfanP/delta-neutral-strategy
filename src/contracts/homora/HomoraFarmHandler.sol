@@ -257,12 +257,19 @@ abstract contract HomoraFarmHandler {
     function getCollateralETHValue(uint256 positionId)
         external
         view
-        returns (uint256);
+        returns (uint256)
+    {
+        return IHomoraBank(homoraBank).getCollateralETHValue(positionId);
+    }
 
     /// @dev Return the total borrow value of the given position in ETH.
     /// @param positionId The position ID to query for the borrow value.
     function getBorrowETHValue(uint256 positionId)
         external
         view
-        returns (uint256);
+        returns (uint256)
+    {
+        return IHomoraBank(homoraBank).getBorrowETHValue(positionId);
+    }
+
 }

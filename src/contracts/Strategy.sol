@@ -117,11 +117,12 @@ contract Strategy is BaseStrategy, HomoraFarmHandler {
         // uint256 freeTokens = want.balanceOf(address(this));
         // Call a harvest and add the harvest to the free token balance
 
-        // Get these values all from a homora view function
-        uint longEquityValue;
-        uint longLoanValue;
-        uint shortEquityValue;
-        uint shortLoanValue; 
+        // Values in ETH
+        uint longLoanValue    = getBorrowETHValue(longPositionId);
+        uint shortLoanValue   = getBorrowETHValue(shortPositionId);
+        uint longEquityValue  = getCollateralETHValue(longPositionId) - longLoanValue;
+        uint shortEquityValue = getCollateralETHValue(shortPositionId) - shortLoanValue;
+
         uint harvestValue; 
 
         DeltaNeutralMetadata memory data = DeltaNeutralMetadata(
@@ -133,12 +134,14 @@ contract Strategy is BaseStrategy, HomoraFarmHandler {
             farmLeverage
         );
         
-
+        // All values here valaulated in ETH
         uint desiredAdjustment = data.getDesiredAdjustment();
         (uint longPositionEquityAdd, ) = data.longEquityRebalance(desiredAdjustment);
         (uint longPositionLoanAdd, ) = data.longLoanRebalance(desiredAdjustment);
         (uint shortPositionEquityAdd, ) = data.shortEquityRebalance(desiredAdjustment);
         (uint shortPositionLoanAdd, ) = data.shortLoanRebalance(desiredAdjustment);
+
+        // Need to convert the ETH values to token values using the oracle Impl
 
         // Call Reduce Position
 
