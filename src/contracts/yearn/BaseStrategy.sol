@@ -610,6 +610,8 @@ abstract contract BaseStrategy {
      */
     function adjustPosition(uint256 _debtOutstanding) internal virtual;
 
+    function addToPosition(uint256 _debtOutstanding) internal virtual;
+
     /**
      * Liquidate up to `_amountNeeded` of `want` of this strategy's positions,
      * irregardless of slippage. Any excess will be re-invested with `adjustPosition()`.
@@ -780,7 +782,7 @@ abstract contract BaseStrategy {
         debtOutstanding = vault.report(profit, loss, debtPayment);
 
         // Check if free returns are left, and re-invest them
-        adjustPosition(debtOutstanding);
+        addToPosition(debtOutstanding);
 
         // call healthCheck contract
         if (doHealthCheck && healthCheck != address(0)) {
