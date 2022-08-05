@@ -1,10 +1,11 @@
-// SPDX-License-Identifier: AGPL-3.0
+// SPDX-License-Identifier: MIT
 // Feel free to change the license, but this is what we use
 
-pragma solidity ^0.8.12;
+pragma solidity ^0.8.0;
 import {BaseStrategy, StrategyParams} from "../../yearn/BaseStrategy.sol";
 import { IMasterChef } from "../../../interfaces/sushiswap/IMasterChef.sol";
 import { IERC20 } from "@openzeppelin/contracts/interfaces/IERC20.sol";
+import { SafeERC20 } from "@openzeppelin/contracts/token/ERC20/utils/SafeERC20.sol";
 import { IUniswapRouter } from "../../../interfaces/uniswap/IUniswapRouter.sol";
 
 contract Strategy is BaseStrategy {
@@ -17,15 +18,15 @@ contract Strategy is BaseStrategy {
 
     IMasterChef public MASTERCHEF; // Address of Sushi Staking Contract
 
-    IUniswapRouterV2 public ROUTER; // SwapRouter Address
+    IUniswapRouter public ROUTER; // SwapRouter Address
 
     constructor(
         address _vault,
-        address _reward,
+        IERC20 _reward,
         uint256 _pid,
         address _WETH,
-        address _MASTERCHEF,
-        address _ROUTER
+        IMasterChef _MASTERCHEF,
+        IUniswapRouter _ROUTER
     ) public BaseStrategy(_vault) {
         reward = _reward;
         pid = _pid;
@@ -40,7 +41,7 @@ contract Strategy is BaseStrategy {
 
     function estimatedTotalAssets() public view override returns (uint256) {
         (uint256 staked, ) = MASTERCHEF.userInfo(pid, address(this));
-        return want.balanceOf(address(this)).add(staked);
+        return want.balanceOf(address(this)) + staked;
     }
 
     function prepareReturn(uint256 _debtOutstanding)
@@ -66,13 +67,13 @@ contract Strategy is BaseStrategy {
         }
         _loss = 0; // Can't loose funds, unless rugged
 
-        _profit = profit.sub(_debtPayment);
+        _profit = profit - _debtPayment;
     }
 
     function adjustPosition(uint256 _debtOutstanding) internal override {
         uint256 _preWant = want.balanceOf(address(this));
         if (_preWant > _debtOutstanding) {
-            uint256 toDeposit = _preWant.sub(_debtOutstanding);
+            uint256 toDeposit = _preWant - _debtOutstanding;
 
             want.approve(address(MASTERCHEF), toDeposit);
             MASTERCHEF.deposit(pid, toDeposit);
@@ -88,7 +89,7 @@ contract Strategy is BaseStrategy {
 
         // If we lack sufficient idle want, withdraw the difference from the strategy position
         if (_preWant < _amountNeeded) {
-            uint256 _toWithdraw = _amountNeeded.sub(_preWant);
+            uint256 _toWithdraw = _amountNeeded - _preWant;
             MASTERCHEF.withdraw(pid, _toWithdraw);
 
             // Note: Withdrawl process will earn rewards, this will be deposited into SushiBar on next adjustPositions()
@@ -97,7 +98,7 @@ contract Strategy is BaseStrategy {
         uint256 totalAssets = want.balanceOf(address(this));
         if (_amountNeeded > totalAssets) {
             _liquidatedAmount = totalAssets;
-            _loss = _amountNeeded.sub(totalAssets);
+            _loss = _amountNeeded - totalAssets;
         } else {
             _liquidatedAmount = _amountNeeded;
         }
@@ -163,8 +164,8 @@ contract Strategy is BaseStrategy {
         reward.approve(address(ROUTER), toSwap);
 
         /// @dev slippage check
-        ROUTER.swapExactTokensForTokens(toSwap, 0, path, address(this), now);
+        ROUTER.swapExactTokensForTokens(toSwap, 0, path, address(this), block.timestamp);
 
-        return want.balanceOf(address(this)).sub(startingWantBalance);
+        return want.balanceOf(address(this)) - startingWantBalance;
     }
 }
