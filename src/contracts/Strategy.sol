@@ -8,6 +8,9 @@ pragma experimental ABIEncoderV2;
 import {DeltaNeutralMathLib} from "../../lib/dn-chad-math/DeltaNeutralMathLib.sol";
 import {DeltaNeutralMetadata} from "../../lib/dn-chad-math/DeltaNeutralMathLib.sol";
 
+// Import Homora Farm Functions
+import {HomoraFarmHandler} from "../contracts/homora/HomoraFarmHandler.sol";
+
 // These are the core Yearn libraries
 import {BaseStrategy, StrategyParams} from "./yearn/BaseStrategy.sol";
 import "../interfaces/IHomoraFarmHandler.sol";
@@ -19,38 +22,40 @@ import {SafeERC20} from "@openzeppelin/contracts/token/ERC20/utils/SafeERC20.sol
 // Import interfaces for many popular DeFi projects, or add your own!
 //import "./interfaces/<protocol>/<Interface>.sol";
 
-contract Strategy is BaseStrategy {
+contract Strategy is BaseStrategy, HomoraFarmHandler {
     using SafeERC20 for IERC20;
     using Address for address;
     using DeltaNeutralMathLib for DeltaNeutralMetadata;
 
     // The token pairs which will go into the Homora Farm
     address public homoraFarmHandler;
-    address private token0;
-    address private token1;
+    address private token0; // Token0 is the long token
+    address private token1; // Token1 is the shorted token
     uint private farmLeverage;
     uint private longPositionId;
     uint private shortPositionId;
 
     // solhint-disable-next-line no-empty-blocks
     constructor(
-        address _vault
-        //address _token0,
-        ///address _token1,
-        ///uint _farmLeverage,
-        //address _homoraFarmHandler
-    ) BaseStrategy(_vault) {
+        address _vault,
+        address _homoraBank,
+        address _sushiSwapSpell,
+        address _token0,
+        address _token1,
+        uint _farmLeverage
+    ) BaseStrategy(_vault) 
+    HomoraFarmHandler(_homoraBank, _sushiSwapSpell) 
+    {
         // You can set these parameters on deployment to whatever you want
         // maxReportDelay = 6300;
         // profitFactor = 100;
         // debtThreshold = 0;
-        /*
+
         token0 = _token0;
         token1 = _token1;
         farmLeverage = _farmLeverage;
-        homoraFarmHandler = _homoraFarmHandler;
-        posId0 = 0;
-        posId1 = 0;*/ 
+        longPositionId = 0;
+        shortPositionId = 0;
     }
 
     // ******** OVERRIDE THESE METHODS FROM BASE CONTRACT ************
@@ -112,11 +117,12 @@ contract Strategy is BaseStrategy {
         // uint256 freeTokens = want.balanceOf(address(this));
         // Call a harvest and add the harvest to the free token balance
 
-        // Get these values all from a homora view function
-        uint longEquityValue;
-        uint longLoanValue;
-        uint shortEquityValue;
-        uint shortLoanValue; 
+        // Values in ETH
+        uint longLoanValue    = getBorrowETHValue(longPositionId);
+        uint shortLoanValue   = getBorrowETHValue(shortPositionId);
+        uint longEquityValue  = getCollateralETHValue(longPositionId) - longLoanValue;
+        uint shortEquityValue = getCollateralETHValue(shortPositionId) - shortLoanValue;
+
         uint harvestValue; 
 
         DeltaNeutralMetadata memory data = DeltaNeutralMetadata(
@@ -127,21 +133,22 @@ contract Strategy is BaseStrategy {
             harvestValue,
             farmLeverage
         );
-
+        
+        // All values here valaulated in ETH
         uint desiredAdjustment = data.getDesiredAdjustment();
         (uint longPositionEquityAdd, ) = data.longEquityRebalance(desiredAdjustment);
         (uint longPositionLoanAdd, ) = data.longLoanRebalance(desiredAdjustment);
         (uint shortPositionEquityAdd, ) = data.shortEquityRebalance(desiredAdjustment);
         (uint shortPositionLoanAdd, ) = data.shortLoanRebalance(desiredAdjustment);
 
-        // Manage the allowances of this contract to Homora Farm Handler
+        // Need to convert the ETH values to token values using the oracle Impl
 
         // Call Reduce Position
 
 
         // Call Add Position
         // Position Long
-        uint longPositionIdReturn = IHomoraFarmHandler(homoraFarmHandler).openOrIncreasePositionSushiswap(
+        uint longPositionIdReturn = openOrIncreasePositionSushiswap(
                 longPositionId, 
                 token0,
                 token1,
@@ -156,7 +163,7 @@ contract Strategy is BaseStrategy {
         // This farm is underlevereaged now
 
         // Position Two
-        uint shortPositionIdReturn = IHomoraFarmHandler(homoraFarmHandler).openOrIncreasePositionSushiswap(
+        uint shortPositionIdReturn = openOrIncreasePositionSushiswap(
                 shortPositionId, 
                 token0,
                 token1,
