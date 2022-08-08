@@ -22,20 +22,20 @@ contract Strategy is BaseStrategy {
 
     constructor(
         address _vault,
-        IERC20 _reward,
+        address _reward,
         uint256 _pid,
         address _WETH,
-        IMasterChef _MASTERCHEF,
-        IUniswapRouter _ROUTER
+        address _MASTERCHEF,
+        address _ROUTER
     ) public BaseStrategy(_vault) {
-        reward = _reward;
+        reward = IERC20(_reward);
         pid = _pid;
         WETH = _WETH;
-        MASTERCHEF = _MASTERCHEF;
-        ROUTER = _ROUTER;
+        MASTERCHEF = IMasterChef(_MASTERCHEF);
+        ROUTER = IUniswapRouter(_ROUTER);
     }
 
-    function name() external view override returns (string memory) {
+    function name() external pure override returns (string memory) {
         return "StrategySushiGeneric";
     }
 
@@ -53,7 +53,8 @@ contract Strategy is BaseStrategy {
             uint256 _debtPayment
         )
     {
-        MASTERCHEF.harvest(pid, address(this));
+        /// @dev harvest sushi token
+        MASTERCHEF.withdraw(pid, 0);
 
         uint256 toSwap = reward.balanceOf(address(this));
 
@@ -119,7 +120,7 @@ contract Strategy is BaseStrategy {
 
     function protectedTokens()
         internal
-        view
+        pure
         override
         returns (address[] memory)
     {
@@ -155,11 +156,13 @@ contract Strategy is BaseStrategy {
 
     function _swapToWant(uint256 toSwap) internal returns (uint256) {
         uint256 startingWantBalance = want.balanceOf(address(this));
+        uint256 rewardBalance = reward.balanceOf(address(this));
+        // if (rewardBalance != 0)
+            return 0;
 
-        address[] memory path = new address[](3);
+        address[] memory path = new address[](2);
         path[0] = address(reward);
         path[1] = WETH;
-        path[2] = address(want);
 
         reward.approve(address(ROUTER), toSwap);
 
@@ -167,5 +170,15 @@ contract Strategy is BaseStrategy {
         ROUTER.swapExactTokensForTokens(toSwap, 0, path, address(this), block.timestamp);
 
         return want.balanceOf(address(this)) - startingWantBalance;
+    }
+
+    function addToPosition(uint256 _debtOutstanding) internal override {
+        uint256 _preWant = want.balanceOf(address(this));
+        if (_preWant > _debtOutstanding) {
+            uint256 toDeposit = _preWant - _debtOutstanding;
+
+            want.approve(address(MASTERCHEF), toDeposit);
+            MASTERCHEF.deposit(pid, toDeposit);
+        }
     }
 }
