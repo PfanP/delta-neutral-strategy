@@ -31,4 +31,9 @@ contract UniswapV2Oracle is UsingBaseOracle, IBaseOracle {
     // split into 2 sqrts multiplication to prevent uint overflow (note the 2**112)
     return sqrtK.mul(2).mul(HomoraMath.sqrt(px0)).div(2**56).mul(HomoraMath.sqrt(px1)).div(2**56);
   }
+  /// @dev Return the price of token0/token1, multiplied by 1e18
+  /// @return The price of token0/token1, and the time timstamp
+  function getPrice(address token0, address unit) external view returns (uint, uint) {
+    
+  }
 }
