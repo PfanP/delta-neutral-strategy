@@ -1,4 +1,7 @@
+/*
+
 // SPDX-License-Identifier: MIT
+
 pragma solidity >=0.8.13;
 
 //import "../../lib/ds-test/test.sol";
@@ -12,7 +15,10 @@ import "../Token.sol";
 
 contract VaultTest is Test {
     ///@notice create a new instance of VyperDeployer
-    VyperDeployer vyperDeployer = new VyperDeployer();
+    //VyperDeployer vyperDeployer = new VyperDeployer();
+    string constant vaultArtifact = "artifacts/Vault.json";
+
+    address _vaultAddress = deployCode(vaultArtifact);
 
     IVault vault;
     Token testToken;
@@ -29,11 +35,16 @@ contract VaultTest is Test {
 
         //uint userBal = testToken.balanceOf(address(this));
         //emit log_uint(userBal);
-
+        /*
         vault = IVault(
             vyperDeployer.deployContract("Vault", abi.encode())
-        );
+        ); */ 
 
+        /*
+        vault = IVault(
+            //vyperDeployer.deployContract("Vault", abi.encode())
+            _vaultAddress
+        );
         vault.initialize(
                 address(testToken),
                 governance,
@@ -49,6 +60,7 @@ contract VaultTest is Test {
 
     function test_deposit() public {
         vm.prank(governance);
+        setUp();
         vault.setDepositLimit(90000e18);
         // Set Vault spend allowance 
         testToken.approve(address(vault), type(uint256).max);
@@ -84,8 +96,9 @@ contract VaultTest is Test {
 */ 
 
 
-
+/*
     function compareStrings(string memory a, string memory b) public view returns (bool) {
         return (keccak256(abi.encodePacked((a))) == keccak256(abi.encodePacked((b))));
     }
 }
+*/ 
