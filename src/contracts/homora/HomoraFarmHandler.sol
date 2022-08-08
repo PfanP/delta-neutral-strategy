@@ -61,7 +61,7 @@ abstract contract HomoraFarmHandler {
         uint256 borrowToken0,
         uint256 borrowToken1,
         uint256 pid // pool id
-    ) external returns (uint256) {
+    ) public returns (uint256) {
         if (supplyToken0 > 0) {
             IERC20(token0).approve(homoraBank, supplyToken0);
             IERC20(token0).transferFrom(
@@ -121,7 +121,7 @@ abstract contract HomoraFarmHandler {
         uint256 amtLPWithdraw,
         uint256 repayAmtToken0,
         uint256 repayAmtToken1
-    ) external {
+    ) public {
         RepayAmounts memory amtData = RepayAmounts(
             amtLPTake,
             amtLPWithdraw,
@@ -146,7 +146,7 @@ abstract contract HomoraFarmHandler {
     }
 
     // Sushiswap harvest rewards
-    function harvestSushiswap(uint256 positionID) external {
+    function harvestSushiswap(uint256 positionID) public {
         IHomoraBank(homoraBank).execute(
             positionID,
             relevantHomoraSpell,
@@ -158,7 +158,7 @@ abstract contract HomoraFarmHandler {
 
     // Sushiswap get pending rewards
     function getPendingRewardForSushiswap(uint256 _positionId)
-        external
+        public
         view
         returns (uint256)
     {
@@ -200,7 +200,7 @@ abstract contract HomoraFarmHandler {
     /// @dev Return the list of all debts for the given position id.
     /// @param positionId position id to get debts of
     function getPositionDebts(uint256 positionId)
-        external
+        public
         view
         returns (address[] memory tokens, uint256[] memory debts)
     {
@@ -211,7 +211,7 @@ abstract contract HomoraFarmHandler {
     /// @param positionId position id to get debt of
     /// @param token ERC20 debt token to query
     function getPositionDebtShareOf(uint256 positionId, address token)
-        external
+        public
         view
         returns (uint256)
     {
@@ -222,7 +222,7 @@ abstract contract HomoraFarmHandler {
     /// @dev Return bank information for the given token.
     /// @param token The token address to query for bank information.
     function getBankInfo(address token)
-        external
+        public
         view
         returns (
             bool isListed,
@@ -237,7 +237,7 @@ abstract contract HomoraFarmHandler {
 
     /// @dev Check whether the oracle supports the token
     /// @param token ERC-20 token to check for support
-    function support(address token) external view returns (bool) {
+    function support(address token) public view returns (bool) {
         return IHomoraBank(homoraBank).support(token);
     }
 
@@ -245,7 +245,7 @@ abstract contract HomoraFarmHandler {
     /// @param positionId The position to query for borrow balance.
     /// @param token The token to query for borrow balance.
     function borrowBalanceStored(uint256 positionId, address token)
-        external
+        public
         view
         returns (uint256)
     {
