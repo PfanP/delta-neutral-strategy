@@ -24,7 +24,7 @@ interface IWMasterChef is IERC1155, IERC20Wrapper {
   /// @dev Burn ERC1155 token to redeem ERC20 token back.
   function burn(uint id, uint amount) external returns (uint pid);
 
-  function sushi() external returns (IERC20);
+  function sushi() external view returns (IERC20);
 
   function decodeId(uint id) external pure returns (uint, uint);
 

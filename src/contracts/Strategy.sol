@@ -22,6 +22,7 @@ import {SafeERC20} from "@openzeppelin/contracts/token/ERC20/utils/SafeERC20.sol
 
 // Import interfaces for many popular DeFi projects, or add your own!
 //import "./interfaces/<protocol>/<Interface>.sol";
+import "../interfaces/ISwapperImpl.sol";
 
 contract Strategy is BaseStrategy, HomoraFarmHandler {
     using SafeERC20 for IERC20;
@@ -32,8 +33,9 @@ contract Strategy is BaseStrategy, HomoraFarmHandler {
 
     // The token pairs which will go into the Homora Farm
     address public homoraFarmHandler;
-    address private token0; // Token0 is the long token
-    address private token1; // Token1 is the shorted token
+    address public swapper;
+    address private token0;
+    address private token1;
     uint private farmLeverage;
     uint private longPositionId;
     uint private shortPositionId;
@@ -45,6 +47,7 @@ contract Strategy is BaseStrategy, HomoraFarmHandler {
         address _sushiSwapSpell,
         address _token0,
         address _token1,
+        address _swapper,
         uint _farmLeverage
     ) BaseStrategy(_vault) 
     HomoraFarmHandler(_homoraBank, _sushiSwapSpell) 
@@ -57,6 +60,7 @@ contract Strategy is BaseStrategy, HomoraFarmHandler {
         token0 = _token0;
         token1 = _token1;
         farmLeverage = _farmLeverage;
+        swapper = _swapper;
         longPositionId = 0;
         shortPositionId = 0;
     }
@@ -93,6 +97,9 @@ contract Strategy is BaseStrategy, HomoraFarmHandler {
 
         IHomoraFarmHandler(homoraFarmHandler).harvestSushiswap(longPositionId);
         IHomoraFarmHandler(homoraFarmHandler).harvestSushiswap(shortPositionId);
+
+        uint256 amountIn = IHomoraFarmHandler(homoraFarmHandler).getSushi().balanceOf(address(this));
+        ISwapperImpl(swapper).swap(amountIn, address(this));
 
         uint256 totalAssets = want.balanceOf(address(this));
         uint256 totalDebt = vault.strategies(address(this)).totalDebt;
