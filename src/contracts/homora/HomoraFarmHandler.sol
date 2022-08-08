@@ -255,7 +255,7 @@ abstract contract HomoraFarmHandler {
     /// @dev Return the total collateral value of the given position in ETH.
     /// @param positionId The position ID to query for the collateral value.
     function getCollateralETHValue(uint256 positionId)
-        external
+        public
         view
         returns (uint256)
     {
@@ -265,7 +265,7 @@ abstract contract HomoraFarmHandler {
     /// @dev Return the total borrow value of the given position in ETH.
     /// @param positionId The position ID to query for the borrow value.
     function getBorrowETHValue(uint256 positionId)
-        external
+        public
         view
         returns (uint256)
     {
