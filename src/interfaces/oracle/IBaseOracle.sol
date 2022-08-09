@@ -9,5 +9,5 @@ interface IBaseOracle {
 
   /// @dev Return the price of token0/token1, multiplied by 1e18
   /// @return The price of token0/token1, and the time timstamp
-  function getPrice(address token0, address unit) external view returns (uint, uint);
+  function getPrice(address token0, address tokenUnit) external view returns (uint, uint);
 }
