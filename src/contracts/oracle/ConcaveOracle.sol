@@ -17,10 +17,15 @@ contract ConcaveOracle is IBaseOracle, Governable {
     }
 
     function getETHPx(address token) external view returns (uint) {
-
+      require(support(token));
+      
     }
 
     function getPrice(address token, address unitToken) external view returns (uint, uint) {
+      require(support(token) && support(unitToken), "not support");
 
+    }
+    function support(address token) external view returns (bool) {
+      return primarySourceCount[token] > 0;
     }
 }
