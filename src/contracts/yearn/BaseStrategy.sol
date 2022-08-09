@@ -701,7 +701,7 @@ abstract contract BaseStrategy {
 
         // Still need some health check stuff here
 
-        emit Tended(profit, loss, debtPayment, debtOutstanding);
+        //emit Tended(profit, loss, debtPayment, debtOutstanding);
     }
 
     function prepareRebalance(uint256 _debtOutstanding)

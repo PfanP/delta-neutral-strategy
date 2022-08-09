@@ -178,10 +178,10 @@ contract Strategy is BaseStrategy, HomoraFarmHandler {
                 longPositionId, 
                 token0,
                 token1,
-                longPositionEquityAdd, // amountToken0
+                longPositionEquityAdjust, // amountToken0
                 0, // amountToken1 will be 0
                 0, // 0 LP Supplied
-                longPositionLoanAdd,
+                longPositionLoanAdjust,
                 0, // 0 Borrrow of token1
                 0 // Place in the Sushiswap PID
         );
@@ -193,11 +193,11 @@ contract Strategy is BaseStrategy, HomoraFarmHandler {
                 shortPositionId, 
                 token0,
                 token1,
-                shortPositionEquityAdd,
+                shortPositionEquityAdjust,
                 0,
                 0, // 0 Supply of LP
                 0, // 0 Borrow of token0
-                shortPositionLoanAdd,
+                shortPositionLoanAdjust,
                 0 // Place in the Sushiswap PID
         );
         // This farm is overleveraged in the case ETH price goes up
