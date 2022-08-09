@@ -65,12 +65,13 @@ contract Strategy is BaseStrategy, HomoraFarmHandler {
         return "Strategy<ProtocolName><TokenType>";
     }
 
+    // Balances of the tokens in the strategy + value of the 2 DN positions open
     function estimatedTotalAssets() public view override returns (uint256) {
         return want.balanceOf(address(this)) +
             getCollateralETHValue(longPositionId) +
             getCollateralETHValue(shortPositionId) -
             getBorrowETHValue(longPositionId) - 
-            getLoanETHValue(shortPositionId);
+            getBorrowETHValue(shortPositionId);
     }
 
     function prepareReturn(uint256 _debtOutstanding)
@@ -122,9 +123,10 @@ contract Strategy is BaseStrategy, HomoraFarmHandler {
             uint256 _debtPayment
         )
     {
-        // Pay back the vault when the debt limit goes down 
+        // Pay back the vault when the debt limit goes down?
+        // Need to estimate profit or losses according to the Homora View functions 
 
-        // Take more money from the vault? 
+        // Take more money from the vault? - No that is taken care of in def report()
 
         uint256 totalDebt = vault.strategies(address(this)).totalDebt;
 
