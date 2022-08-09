@@ -1269,6 +1269,23 @@
       "type": "function"
     },
     {
+      "inputs": [
+        {
+          "name": "user",
+          "type": "address"
+        }
+      ],
+      "name": "returnShares",
+      "outputs": [
+        {
+          "name": "",
+          "type": "uint256"
+        }
+      ],
+      "stateMutability": "view",
+      "type": "function"
+    },
+    {
       "gas": 7773,
       "inputs": [],
       "name": "symbol",

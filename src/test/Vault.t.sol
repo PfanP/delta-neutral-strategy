@@ -1,5 +1,3 @@
-/*
-
 // SPDX-License-Identifier: MIT
 
 pragma solidity >=0.8.13;
@@ -14,11 +12,6 @@ import "../interfaces/IVault.sol";
 import "../Token.sol";
 
 contract VaultTest is Test {
-    ///@notice create a new instance of VyperDeployer
-    //VyperDeployer vyperDeployer = new VyperDeployer();
-    string constant vaultArtifact = "artifacts/Vault.json";
-
-    address _vaultAddress = deployCode(vaultArtifact);
 
     IVault vault;
     Token testToken;
@@ -32,19 +25,22 @@ contract VaultTest is Test {
 
     function setUp() public {
         testToken = new Token();
-
+        
+        ///@notice create a new instance of VyperDeployer
+        //VyperDeployer vyperDeployer = new VyperDeployer();
         //uint userBal = testToken.balanceOf(address(this));
         //emit log_uint(userBal);
         /*
         vault = IVault(
             vyperDeployer.deployContract("Vault", abi.encode())
-        ); */ 
-
-        /*
+        ); */
+        
+        string memory vaultArtifact = "artifacts/Vault.json";
+        address _vaultAddress = deployCode(vaultArtifact);
         vault = IVault(
-            //vyperDeployer.deployContract("Vault", abi.encode())
             _vaultAddress
         );
+
         vault.initialize(
                 address(testToken),
                 governance,
@@ -58,9 +54,9 @@ contract VaultTest is Test {
         //emit log_uint(vaultBal);
     }
 
+/*
     function test_deposit() public {
         vm.prank(governance);
-        setUp();
         vault.setDepositLimit(90000e18);
         // Set Vault spend allowance 
         testToken.approve(address(vault), type(uint256).max);
@@ -68,7 +64,7 @@ contract VaultTest is Test {
         uint amount = 1e18;
         vault.deposit(amount);
 
-        emit log_uint(vault.returnShares(address(this)));
+        emit log_uint(vault.returnShares(address(this))); // This encounters a problem
     }
 
     function test_withdraw() public {
@@ -79,6 +75,8 @@ contract VaultTest is Test {
         uint value = vault.withdraw(maxShares, msg.sender, maxLoss);
         emit log_uint(value);
     }
+*/
+
 /*
     function test_setName() public {
         vm.prank(governance);
@@ -96,9 +94,8 @@ contract VaultTest is Test {
 */ 
 
 
-/*
+
     function compareStrings(string memory a, string memory b) public view returns (bool) {
         return (keccak256(abi.encodePacked((a))) == keccak256(abi.encodePacked((b))));
     }
 }
-*/ 

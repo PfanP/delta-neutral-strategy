@@ -660,19 +660,58 @@ abstract contract BaseStrategy {
         return false;
     }
 
-    /**
+    /** AUTHOR: 0xQuasar
      * @notice
-     *  Adjust the Strategy's position. The purpose of tending isn't to
-     *  realize gains, but to maximize yield by reinvesting any returns.
-     *
-     *  See comments on `adjustPosition()`.
+     *  Adjust the Strategy's position. This method rebalances the Delta Neutral Positions. 
+     *  It is an integral part of the strategy, unlike the original Yearn version of tend. 
+     *  When the DN positions are too out of whack, the tend function takes from the underleveraged
+     *  position and gives to the overleveraged position. This will lock in the IL on the 
+     *  farm positions and thus should be used sparingly. The Harvest function adds to the
+     *  DN positions in an attempt to keep the balance so that this one can be used less. 
+     *  
+     *  This function 
      *
      *  This may only be called by governance, the strategist, or the keeper.
      */
     function tend() external onlyKeepers {
-        // Don't take profits with this call, but adjust for better gains
-        adjustPosition(vault.debtOutstanding());
+        uint256 debtOutstanding = vault.debtOutstanding(); // How much the vault expects the strategy to pay back
+        uint256 profit = 0;
+        uint256 loss = 0;
+        uint256 debtPayment = 0; // Amount to pay back to the vault 
+
+        if (emergencyExit) {
+            // Free up as much capital as possible
+            uint256 amountFreed = liquidateAllPositions();
+            if (amountFreed < debtOutstanding) {
+                loss = debtOutstanding.sub(amountFreed);
+            } else if (amountFreed > debtOutstanding) {
+                profit = amountFreed.sub(debtOutstanding);
+            }
+            debtPayment = debtOutstanding.sub(loss);
+        } else {
+            // Free up returns for Vault to pull
+            (profit, loss, debtPayment) = prepareRebalance(debtOutstanding);
+        }
+
+        // This is where the strategy either pays the vault or gets credit tokens from vault        
+        debtOutstanding = vault.report(profit, loss, debtPayment);
+        // Rebalance positions and add debtOutstanding
+        adjustPosition(debtOutstanding);
+
+
+        // Still need some health check stuff here
+
+        emit Tended(profit, loss, debtPayment, debtOutstanding);
     }
+
+    function prepareRebalance(uint256 _debtOutstanding)
+        internal
+        virtual
+        returns (
+            uint256 _profit,
+            uint256 _loss,
+            uint256 _debtPayment
+        );
 
     /**
      * @notice
