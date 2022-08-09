@@ -101,7 +101,7 @@ contract Strategy is BaseStrategy, HomoraFarmHandler {
         uint256 amountIn = IHomoraFarmHandler(homoraFarmHandler).getSushi().balanceOf(address(this));
         ISwapperImpl(swapper).swap(amountIn, address(this));
 
-        uint256 totalAssets = want.balanceOf(address(this));
+        uint256 totalAssets = estimatedTotalAssets();
         uint256 totalDebt = vault.strategies(address(this)).totalDebt;
         if (totalAssets > _debtOutstanding) {
             _debtPayment = _debtOutstanding;
@@ -315,7 +315,7 @@ contract Strategy is BaseStrategy, HomoraFarmHandler {
         // NOTE: Maintain invariant `_liquidatedAmount + _loss <= _amountNeeded`
 
         uint256 totalAssets = estimatedTotalAssets();
-        uint256 lpRemoveProportion = 0;
+        uint256 lpRemoveProportion;
 
         if (_amountNeeded > totalAssets) {
             _liquidatedAmount = totalAssets;
