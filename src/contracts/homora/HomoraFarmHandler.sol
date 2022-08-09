@@ -42,9 +42,10 @@ abstract contract HomoraFarmHandler {
     constructor(
         address _homoraBank,
         address _relevantHomoraSpell
-    ) public {
+    ) {
         homoraBank = _homoraBank;
         relevantHomoraSpell = _relevantHomoraSpell;
+        sushiSwapSpell = 0x0000000000000000000000000000000000000000;
     }
 
     // *** Sushiswap *** //

@@ -7,6 +7,7 @@ import {SafeERC20} from "@openzeppelin/contracts/token/ERC20/utils/SafeERC20.sol
 import {ExtendedTest} from "./ExtendedTest.sol";
 import {Vm} from "forge-std/Vm.sol";
 import {IVault} from "../../interfaces/IVault.sol";
+import "../../../utils/VyperDeployer.sol";
 
 // NOTE: if the name of the strat or file changes this needs to be updated
 import {Strategy} from "../../contracts/Strategy.sol";
@@ -26,6 +27,13 @@ contract StrategyFixture is ExtendedTest {
 
     mapping(string => address) public tokenAddrs;
     mapping(string => uint256) public tokenPrices;
+
+    // Strategy Params
+    address homoraBank = 0x0000000000000000000000000000000000000000;
+    address sushiSwapSpell = 0x0000000000000000000000000000000000000000;
+    address token0 = 0x0000000000000000000000000000000000000000;
+    address token1 = 0x0000000000000000000000000000000000000000;
+    uint farmLeverage = 3;
 
     address public gov = 0xFEB4acf3df3cDEA7399794D0869ef76A6EfAff52;
     address public user = address(1);
@@ -52,10 +60,12 @@ contract StrategyFixture is ExtendedTest {
         _setTokenPrices();
         _setTokenAddrs();
 
+        emit log_uint(1);
         // Choose a token from the tokenAddrs mapping, see _setTokenAddrs for options
         string memory token = "DAI";
         weth = IERC20(tokenAddrs["WETH"]);
         want = IERC20(tokenAddrs[token]);
+        emit log_uint(2);
 
         (address _vault, address _strategy) = deployVaultAndStrategy(
             address(want),
@@ -68,6 +78,7 @@ contract StrategyFixture is ExtendedTest {
             keeper,
             strategist
         );
+        emit log_uint(3);
         vault = IVault(_vault);
         strategy = Strategy(_strategy);
 
@@ -78,6 +89,7 @@ contract StrategyFixture is ExtendedTest {
         bigAmount =
             uint256(bigDollarNotional / tokenPrices[token]) *
             10**vault.decimals();
+        emit log_uint(4);
 
         // add more labels to make your traces readable
         vm.label(address(vault), "Vault");
@@ -91,6 +103,7 @@ contract StrategyFixture is ExtendedTest {
         vm.label(management, "Management");
         vm.label(strategist, "Strategist");
         vm.label(keeper, "Keeper");
+        emit log_uint(5);
 
         // do here additional setup
     }
@@ -106,28 +119,50 @@ contract StrategyFixture is ExtendedTest {
         address _management
     ) public returns (address) {
         address _vaultAddress = deployCode(vaultArtifact);
-        IVault _vault = IVault(_vaultAddress);
+        //VyperDeployer vyperDeployer = new VyperDeployer();
+        IVault _vault = IVault(
+            //vyperDeployer.deployContract("Vault", abi.encode())
+            _vaultAddress
+        );
+        emit log_uint(100);
 
-        vm.prank(_gov);
+        _name = 'cVault';
+        _symbol = 'cv';
+        emit log_address(_token);
+        emit log_address(_gov);
+        emit log_address(_rewards);
+        emit log_string(_name);
+        emit log_string(_symbol);
+
+        //vm.prank(_gov);
         _vault.initialize(
             _token,
             _gov,
             _rewards,
             _name,
-            _symbol,
-            _guardian,
-            _management
+            _symbol//,
+            //_guardian,
+            //_management
         );
+        emit log_uint(101);
 
         vm.prank(_gov);
         _vault.setDepositLimit(type(uint256).max);
+        emit log_uint(102);
 
         return address(_vault);
     }
 
     // Deploys a strategy
     function deployStrategy(address _vault) public returns (address) {
-        Strategy _strategy = new Strategy(_vault);
+        Strategy _strategy = new Strategy(
+            _vault,
+            homoraBank,
+            sushiSwapSpell,
+            token0,
+            token1,
+            farmLeverage
+        );
 
         return address(_strategy);
     }
@@ -144,6 +179,7 @@ contract StrategyFixture is ExtendedTest {
         address _keeper,
         address _strategist
     ) public returns (address _vaultAddr, address _strategyAddr) {
+        emit log_uint(11);
         _vaultAddr = deployVault(
             _token,
             _gov,
@@ -153,17 +189,27 @@ contract StrategyFixture is ExtendedTest {
             _guardian,
             _management
         );
+        emit log_uint(12);
+
         IVault _vault = IVault(_vaultAddr);
-        
+
         vm.prank(_strategist);
         _strategyAddr = deployStrategy(_vaultAddr);
         Strategy _strategy = Strategy(_strategyAddr);
 
         vm.prank(_strategist);
         _strategy.setKeeper(_keeper);
+        emit log_uint(13);
 
         vm.prank(_gov);
-        _vault.addStrategy(_strategyAddr, 10_000, 0, type(uint256).max, 1_000);
+        _vault.addStrategy(
+            _strategyAddr, 
+            10_000, 
+            0, 
+            type(uint256).max, 
+            1_000
+        );
+        emit log_uint(14);
 
         return (address(_vault), address(_strategy));
     }

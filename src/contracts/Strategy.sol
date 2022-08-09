@@ -65,9 +65,13 @@ contract Strategy is BaseStrategy, HomoraFarmHandler {
         return "Strategy<ProtocolName><TokenType>";
     }
 
+    // Balances of the tokens in the strategy + value of the 2 DN positions open
     function estimatedTotalAssets() public view override returns (uint256) {
-        // TODO: Build a more accurate estimate using the value of all positions in terms of `want`
-        return want.balanceOf(address(this));
+        return want.balanceOf(address(this)) +
+            getCollateralETHValue(longPositionId) +
+            getCollateralETHValue(shortPositionId) -
+            getBorrowETHValue(longPositionId) - 
+            getBorrowETHValue(shortPositionId);
     }
 
     function prepareReturn(uint256 _debtOutstanding)
@@ -105,6 +109,29 @@ contract Strategy is BaseStrategy, HomoraFarmHandler {
         }
     }
 
+    // ******** AUTHOR 0xQuasar ******** //
+    // * Prepare for the DN rebalancing // 
+    // * No Harvesting from the Farms, save on some gas. 
+    // * 
+    // debtOutstanding is how much the vault expects the strategy to pay back
+    function prepareRebalance(uint256 _debtOutstanding) 
+        internal 
+        override
+        returns (
+            uint256 _profit,
+            uint256 _loss,
+            uint256 _debtPayment
+        )
+    {
+        // Pay back the vault when the debt limit goes down?
+        // Need to estimate profit or losses according to the Homora View functions 
+
+        // Take more money from the vault? - No that is taken care of in def report()
+
+        uint256 totalDebt = vault.strategies(address(this)).totalDebt;
+
+    }
+
     // Add: Function to change the farm leverage // TODO 
 
     // ********* For Homora - Sushiswap ********** 
@@ -123,26 +150,25 @@ contract Strategy is BaseStrategy, HomoraFarmHandler {
         uint longEquityValue  = getCollateralETHValue(longPositionId) - longLoanValue;
         uint shortEquityValue = getCollateralETHValue(shortPositionId) - shortLoanValue;
 
-        uint harvestValue; 
-
         DeltaNeutralMetadata memory data = DeltaNeutralMetadata(
             longEquityValue,
             longLoanValue,
             shortEquityValue,
             shortLoanValue,
-            harvestValue,
+            0,  // No harvest in tend function
             farmLeverage
         );
         
-        // All values here valaulated in ETH
+        // All values here valuated in ETH
         uint desiredAdjustment = data.getDesiredAdjustment();
-        (uint longPositionEquityAdd, ) = data.longEquityRebalance(desiredAdjustment);
-        (uint longPositionLoanAdd, ) = data.longLoanRebalance(desiredAdjustment);
-        (uint shortPositionEquityAdd, ) = data.shortEquityRebalance(desiredAdjustment);
-        (uint shortPositionLoanAdd, ) = data.shortLoanRebalance(desiredAdjustment);
+        (uint longPositionEquityAdjust, bool addToLongEquity) = data.longEquityRebalance(desiredAdjustment);
+        (uint longPositionLoanAdjust, bool addToLongLoan) = data.longLoanRebalance(desiredAdjustment);
+        (uint shortPositionEquityAdjust, bool addToShortEquity) = data.shortEquityRebalance(desiredAdjustment);
+        (uint shortPositionLoanAdjust, bool addToShortLoan) = data.shortLoanRebalance(desiredAdjustment);
 
         // Need to convert the ETH values to token values using the oracle Impl
 
+        // One position will need reduction, the other will need addition
         // Call Reduce Position
 
 
@@ -180,7 +206,7 @@ contract Strategy is BaseStrategy, HomoraFarmHandler {
         // (2) Maintain the farm leverage
         // Rebalance action: (1) Pull liquidity from one farm and deposit in other
         // (2) Take out loans in the one that got liquidity pulled
-        // NOTE: If possible, reduce the underleverage farm supply without 
+        // NOTE: Reduce the underleverage farm supply without 
         // Paying the loan back. This will reduce number of actions. 
         // 
         // Rebalance trigger conditions on chain
