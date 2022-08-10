@@ -1,41 +1,42 @@
 // SPDX-License-Identifier: MIT
-// Feel free to change the license, but this is what we use
-
 pragma solidity ^0.8.0;
-import {BaseStrategy, StrategyParams} from "../../yearn/BaseStrategy.sol";
-import { IMasterChef } from "../../../interfaces/sushiswap/IMasterChef.sol";
-import { IERC20 } from "@openzeppelin/contracts/interfaces/IERC20.sol";
-import { SafeERC20 } from "@openzeppelin/contracts/token/ERC20/utils/SafeERC20.sol";
-import { IUniswapRouter } from "../../../interfaces/uniswap/IUniswapRouter.sol";
 
+import {BaseStrategy, StrategyParams} from "../../yearn/BaseStrategy.sol";
+import { IMasterChef }                from "../../../interfaces/sushiswap/IMasterChef.sol";
+import { IERC20 }                     from "@openzeppelin/contracts/interfaces/IERC20.sol";
+import { SafeERC20 }                  from "@openzeppelin/contracts/token/ERC20/utils/SafeERC20.sol";
+import { IUniswapRouter }             from "../../../interfaces/uniswap/IUniswapRouter.sol";
+import { IUniswapV2Pair }             from "../../../interfaces/uniswap/IUniswapPair.sol";
+
+/// @notice This is a base strategy for the SushiSwap
+/// @author Khanh 
 contract Strategy is BaseStrategy {
     using SafeERC20 for IERC20;
 
-    IERC20 public reward; //The token we farm(Sushi)
+    /// Constant variables for LP management
+    IERC20 public constant reward = IERC20(0x6B3595068778DD592e39A122f4f5a5cF09C90fE2); //The token we farm(Sushi)
+    IMasterChef public constant MASTERCHEF = IMasterChef(0xc2EdaD668740f1aA35E4D8f227fB8E17dcA888Cd);
+    IUniswapRouter public ROUTER = IUniswapRouter(0xd9e1cE17f2641f24aE83637ab66a2cca9C378B9F); // SwapRouter Address
+
     uint256 public pid; // Pool ID
-
-    address public WETH; // weth address to swap
-
-    IMasterChef public MASTERCHEF; // Address of Sushi Staking Contract
-
-    IUniswapRouter public ROUTER; // SwapRouter Address
+    address public immutable token0; // token0 for want(LP) token
+    address public immutable token1; // token1 for want(LP) token
+    ///@dev could be want token
+    address public immutable pair;
 
     constructor(
         address _vault,
-        address _reward,
         uint256 _pid,
-        address _WETH,
-        address _MASTERCHEF,
-        address _ROUTER
+        address _token0,
+        address _token1
     ) public BaseStrategy(_vault) {
-        reward = IERC20(_reward);
-        pid = _pid;
-        WETH = _WETH;
-        MASTERCHEF = IMasterChef(_MASTERCHEF);
-        ROUTER = IUniswapRouter(_ROUTER);
+        pid        = _pid;
+        token0     = _token0;
+        token1     = _token1;
+        (pair, , , )    = MASTERCHEF.poolInfo(_pid);
     }
 
-    function name() external pure override returns (string memory) {
+    function name() external pure virtual override returns (string memory) {
         return "StrategySushiGeneric";
     }
 
@@ -46,6 +47,7 @@ contract Strategy is BaseStrategy {
 
     function prepareReturn(uint256 _debtOutstanding)
         internal
+        virtual
         override
         returns (
             uint256 _profit,
@@ -71,7 +73,7 @@ contract Strategy is BaseStrategy {
         _profit = profit - _debtPayment;
     }
 
-    function adjustPosition(uint256 _debtOutstanding) internal override {
+    function adjustPosition(uint256 _debtOutstanding) internal virtual override {
         uint256 _preWant = want.balanceOf(address(this));
         if (_preWant > _debtOutstanding) {
             uint256 toDeposit = _preWant - _debtOutstanding;
@@ -83,6 +85,7 @@ contract Strategy is BaseStrategy {
 
     function liquidatePosition(uint256 _amountNeeded)
         internal
+        virtual
         override
         returns (uint256 _liquidatedAmount, uint256 _loss)
     {
@@ -105,7 +108,7 @@ contract Strategy is BaseStrategy {
         }
     }
 
-    function liquidateAllPositions() internal override returns (uint256) {
+    function liquidateAllPositions() internal virtual override returns (uint256) {
         (uint256 staked, ) = MASTERCHEF.userInfo(pid, address(this));
 
         // Withdraw all want from Chef
@@ -114,18 +117,20 @@ contract Strategy is BaseStrategy {
         return want.balanceOf(address(this));
     }
 
-    function prepareMigration(address _newStrategy) internal override {
+    function prepareMigration(address _newStrategy) internal virtual override {
         liquidateAllPositions();
     }
 
     function protectedTokens()
         internal
-        pure
+        view
         override
         returns (address[] memory)
     {
-        address[] memory protected = new address[](1);
         // NOTE: May need to add lpComponent anyway
+        address[] memory protected = new address[](2);
+        protected[0] = address(reward);
+        protected[1] = address(want);
         return protected;
     }
 
@@ -156,23 +161,34 @@ contract Strategy is BaseStrategy {
 
     function _swapToWant(uint256 toSwap) internal returns (uint256) {
         uint256 startingWantBalance = want.balanceOf(address(this));
-        uint256 rewardBalance = reward.balanceOf(address(this));
-        // if (rewardBalance != 0)
+        if (toSwap == 0)
             return 0;
 
+        /// @dev swap half sushi token to WETH
         address[] memory path = new address[](2);
         path[0] = address(reward);
-        path[1] = WETH;
+        path[1] = token0;
 
         reward.approve(address(ROUTER), toSwap);
+        /// @dev slippage check
+        uint256[] memory token0AmountOuts = ROUTER.swapExactTokensForTokens(toSwap/2, 0, path, address(this), block.timestamp);
+
+        /// @dev swap half sushi token to SYN
+        path[0] = address(reward);
+        path[1] = token1;
 
         /// @dev slippage check
-        ROUTER.swapExactTokensForTokens(toSwap, 0, path, address(this), block.timestamp);
+        uint256[] memory token1AmountOuts = ROUTER.swapExactTokensForTokens(toSwap/2, 0, path, address(this), block.timestamp);
+
+        /// @dev add liquidity to sushiswap
+        IERC20(token0).safeTransfer(pair, token0AmountOuts[token0AmountOuts.length - 1]);
+        IERC20(token1).safeTransfer(pair, token1AmountOuts[token1AmountOuts.length - 1]);
+        IUniswapV2Pair(pair).mint(address(this));
 
         return want.balanceOf(address(this)) - startingWantBalance;
     }
 
-    function addToPosition(uint256 _debtOutstanding) internal override {
+    function addToPosition(uint256 _debtOutstanding) internal virtual override {
         uint256 _preWant = want.balanceOf(address(this));
         if (_preWant > _debtOutstanding) {
             uint256 toDeposit = _preWant - _debtOutstanding;

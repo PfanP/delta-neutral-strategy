@@ -24,10 +24,13 @@ uint256 constant PID = 305;
 
 contract SushiBaseStrategyTest is ExtendedTest {
     VyperDeployer vyperDeployer = new VyperDeployer();
-    address synLP = address(0x4A86C01d67965f8cB3d0AAA2c655705E64097C31);
+    address synLP = 0x4A86C01d67965f8cB3d0AAA2c655705E64097C31;
+    address sushi = 0x6B3595068778DD592e39A122f4f5a5cF09C90fE2;
+    address weth  = 0xC02aaA39b223FE8D0A0e5C4F27eAD9083C756Cc2;
+    address syn   = 0x0f2D719407FdBeFF09D87557AbB7232601FD9F29;
     address masterChef = address(0xc2EdaD668740f1aA35E4D8f227fB8E17dcA888Cd);
     address router = address(0xd9e1cE17f2641f24aE83637ab66a2cca9C378B9F);
-    address sushi = address(0x6B3595068778DD592e39A122f4f5a5cF09C90fE2);
+
     address wethWhale = address(0x3D24C78ef79809DF43DaBAeaB1C14DB793Fc4d1f);
     Strategy sushiStrategy;
 
@@ -35,7 +38,7 @@ contract SushiBaseStrategyTest is ExtendedTest {
 
     IVault public vault;
     Strategy public strategy;
-    IERC20 public want = IERC20(0x4A86C01d67965f8cB3d0AAA2c655705E64097C31);
+    IERC20 public want = IERC20(synLP);
 
     address public gov = 0xFEB4acf3df3cDEA7399794D0869ef76A6EfAff52;
 
@@ -125,13 +128,11 @@ contract SushiBaseStrategyTest is ExtendedTest {
     // Deploys a strategy
     function deployStrategy(
         address _vault,
-        address _reward,
         uint256 _pid,
-        address _WETH,
-        address _MASTERCHEF,
-        address _ROUTER
+        address _token0,
+        address _token1
     ) public returns (address) {
-        Strategy _strategy = new Strategy(_vault, _reward, _pid, _WETH, _MASTERCHEF, _ROUTER);
+        Strategy _strategy = new Strategy(_vault, _pid, _token0, _token1);
         return address(_strategy);
     }
 
@@ -161,11 +162,9 @@ contract SushiBaseStrategyTest is ExtendedTest {
         vm.prank(_strategist);
         _strategyAddr = deployStrategy(
             _vaultAddr,
-            sushi,
             PID,
-            address(want),
-            masterChef,
-            router
+            weth,
+            syn
         );
         Strategy _strategy = Strategy(_strategyAddr);
 
@@ -194,14 +193,13 @@ contract SushiBaseStrategyTest is ExtendedTest {
 
     /// Test Operations
     function test_StrategyOperation() public {
-        uint _amount = 5e18;
+        uint _amount = 1e18;
         // deal(address(want), wethWhale, _amount);
 
         uint256 balanceBefore = want.balanceOf(address(wethWhale));
         vm.prank(wethWhale);
         want.approve(address(vault), _amount);
         vm.prank(wethWhale);
-        console.log('balanceBefore', balanceBefore);
         vault.deposit(_amount);
         assertRelApproxEq(want.balanceOf(address(vault)), _amount, DELTA);
 
