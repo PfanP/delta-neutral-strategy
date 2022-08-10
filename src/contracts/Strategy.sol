@@ -170,8 +170,8 @@ contract Strategy is BaseStrategy, HomoraFarmHandler {
         (uint256 shortPositionEquityAdjust, bool addToShortEquity) = data.shortEquityRebalance(desiredAdjustment, _debtOutstanding);
         (uint256 shortPositionLoanAdjust, bool addToShortLoan) = data.shortLoanRebalance(desiredAdjustment, _debtOutstanding);
 
-        // Need to convert the ETH values to token values using the oracle Impl
-        uint256 longPositionEquityToken1 = 
+        // TODO: Need to convert the ETH values to token values using the oracle Impl
+        //uint256 longPositionEquityToken1 = ;
 
 
         // One position will need reduction, the other will need addition
@@ -180,7 +180,7 @@ contract Strategy is BaseStrategy, HomoraFarmHandler {
 
         // Call Add Position
         // Position Long
-        uint longPositionIdReturn = openOrIncreasePositionSushiswap(
+        uint256 longPositionIdReturn = openOrIncreasePositionSushiswap(
                 longPositionId, 
                 token0,
                 token1,
@@ -195,7 +195,7 @@ contract Strategy is BaseStrategy, HomoraFarmHandler {
         // This farm is underlevereaged now
 
         // Position Two
-        uint shortPositionIdReturn = openOrIncreasePositionSushiswap(
+        uint256 shortPositionIdReturn = openOrIncreasePositionSushiswap(
                 shortPositionId, 
                 token0,
                 token1,
@@ -313,13 +313,17 @@ contract Strategy is BaseStrategy, HomoraFarmHandler {
         // Remove the LPs in proportion to _amountNeeded / totalAssets
         // (50% from the long position, 50% from the short position)
 
+        uint256 longLpTokenAmount = 0;
+        uint256 shortLpTokenAmount = 0;
+        
         (,,,longLpTokenAmount) = getPositionInfo(longPositionId);
         (,,,shortLpTokenAmount) = getPositionInfo(shortPositionId);
 
         // Payment of debts is in proportion to the farm leverage
 
-        //uint256 removeLongLpAmount = longLpTokenAmount * lpRemoveProportion / 2 //TODO: Fill in math here
-        //uint256 removeShortLpAmount = shortLpTokenAmount * lpRemoveProportion /2 //TODO: Fill in math here
+        // TODO: Fill in math for the below
+        uint256 removeLongLpAmount = longLpTokenAmount * lpRemoveProportion / 2; //TODO: Fill in math here
+        uint256 removeShortLpAmount = shortLpTokenAmount * lpRemoveProportion /2; //TODO: Fill in math here
 
         // AmtTake should be equal to AmtWithdraw - if they're unequal we would
         // End up with LP tokens instead of token0 and token1

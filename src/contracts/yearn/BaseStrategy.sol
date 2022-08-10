@@ -248,6 +248,8 @@ abstract contract BaseStrategy {
     // So indexers can keep track of this
     event Harvested(uint256 profit, uint256 loss, uint256 debtPayment, uint256 debtOutstanding);
 
+    event Tended(uint256 profit, uint256 loss, uint256 debtPayment, uint256 debtOutstanding);
+    
     event UpdatedStrategist(address newStrategist);
 
     event UpdatedKeeper(address newKeeper);
