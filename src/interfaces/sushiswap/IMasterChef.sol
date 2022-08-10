@@ -20,4 +20,9 @@ interface IMasterChef {
         external
         view
         returns (uint256, uint256);
+    
+    function poolInfo(uint256 _pid) 
+        external 
+        view 
+        returns (address, uint256, uint256, uint256);
 }
