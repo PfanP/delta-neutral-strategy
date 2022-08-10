@@ -5,6 +5,7 @@ import "../../lib/forge-std/src/Test.sol";
 import "../contracts/oracle/UniswapV2Oracle.sol";
 import "../contracts/oracle/ConcaveOracle.sol";
 import "../interfaces/oracle/IBaseOracle.sol";
+import "../../lib/dn-chad-math/DopeAssMathLib.sol";
 
 contract OracleTest is Test {
     // tokens
@@ -54,6 +55,50 @@ contract OracleTest is Test {
 
     function test_sample() public {
         emit log_string("test_sample");
+    }
+
+    event log_uint256(uint256);
+
+    function test_getETHPx_WETH() public {
+        emit log_string("test_getETHPx");
+        uint256 px = oracle.getETHPx(WETH);
+        px = px >> 112;
+        emit log_string("test_getETHPx For WETH");
+        emit log_uint256(px);
+        assert(px == 1);
+    }
+
+    function test_getETHPx_DAI() public {
+        emit log_string("test_getETHPx");
+        uint256 px = oracle.getETHPx(DAI);
+        emit log_string("test_getETHPx For DAI");
+        emit log_uint256(px);
+    }
+
+    function test_getETHPx_USDC() public {
+        emit log_string("test_getETHPx");
+        uint256 px = oracle.getETHPx(USDC);
+        emit log_string("test_getETHPx For USDC");
+        emit log_uint256(px);
+    }
+
+    function test_getPrice_DAI_WETH() public {
+        emit log_string("test_getPrice");
+        (uint256 price, uint256 timestamp) = oracle.getPrice(DAI, WETH);
+        emit log_string("test_getPrice For DAI-WETH");
+        emit log_uint256(price);
+        emit log_string("test_getPrice timestamp");
+        emit log_uint256(timestamp);
+        uint256 px = oracle.getETHPx(DAI);
+        emit log_string("px");
+        emit log_uint256(px);
+        uint256 extendedPx = px * 1e18;
+        emit log_string("returned price");
+        emit log_uint256(price);
+        emit log_string("calculated price");
+        uint256 calculatedPrice = ((extendedPx * 1e18) >> 112)/1e18;
+        emit log_uint256(((extendedPx * 1e18) >> 112)/1e18);
+        assert(price == calculatedPrice);
     }
 
     function test_sort() public {
