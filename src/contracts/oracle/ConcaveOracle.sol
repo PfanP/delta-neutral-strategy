@@ -14,6 +14,10 @@ contract ConcaveOracle is IBaseOracle, Governable {
     mapping(address => mapping(uint256 => IBaseOracle)) public primarySources; // Mapping from token to (mapping from index to oracle source)
     mapping(address => uint256) public maxPriceDeviations; // Mapping from token to max price deviation (multiplied by 1e18)
 
+    uint256 public constant MIN_PRICE_DEVIATION = 1e18; // min price deviation
+    uint256 public constant MAX_PRICE_DEVIATION = 1.5e18; // max price deviation
+    uint256 public constant MAX_SOURCE_COUNT = 3; // max number of sources
+
     function initialize() public initializer {
         __Governable__init();
     }
@@ -66,8 +70,10 @@ contract ConcaveOracle is IBaseOracle, Governable {
             );
             return DopeAssMathLib.average(prices[0], prices[1]); // if 2 valid sources, return average
         } else if (validSourceCount == 3) {
-            bool midMinOk = prices[1].mul(1e18) / prices[0] <= maxPriceDeviation;
-            bool maxMidOk = prices[2].mul(1e18) / prices[1] <= maxPriceDeviation;
+            bool midMinOk = prices[1].mul(1e18) / prices[0] <=
+                maxPriceDeviation;
+            bool maxMidOk = prices[2].mul(1e18) / prices[1] <=
+                maxPriceDeviation;
             if (midMinOk && maxMidOk) {
                 return prices[1]; // if 3 valid sources, and each pair is within thresh, return median
             } else if (midMinOk) {
@@ -113,7 +119,11 @@ contract ConcaveOracle is IBaseOracle, Governable {
     ////////////////////////////// SOURCE MANAGEMENT //////////////////////////////////////
     ///////////////////////////////////////////////////////////////////////////////////////
 
-    event AddedPrimarySource(address token, uint256 maxPriceDeviation, IBaseOracle[] oracles);
+    event AddedPrimarySource(
+        address token,
+        uint256 maxPriceDeviation,
+        IBaseOracle[] oracles
+    );
 
     function addPrimarySource(
         address[] memory tokens,
@@ -125,9 +135,25 @@ contract ConcaveOracle is IBaseOracle, Governable {
                 tokens.length == oracles.length,
             "length mismatch"
         );
+        // do pre checks to save gas
+        for (uint256 i = 0; i < tokens.length; i++) {
+            require(
+                maxPriceDeviationList[i] >= MIN_PRICE_DEVIATION &&
+                    maxPriceDeviationList[i] <= MAX_PRICE_DEVIATION,
+                "max price deviation out of range"
+            );
+            require(
+                MAX_SOURCE_COUNT >= oracles[i].length,
+                "too many oracles"
+            );
+        }
 
         for (uint256 idx = 0; idx < tokens.length; idx++) {
-          _addPrimarySource(tokens[idx], maxPriceDeviationList[idx], oracles[idx]);
+            _addPrimarySource(
+                tokens[idx],
+                maxPriceDeviationList[idx],
+                oracles[idx]
+            );
         }
     }
 
@@ -136,7 +162,13 @@ contract ConcaveOracle is IBaseOracle, Governable {
         uint256 maxPriceDeviation,
         IBaseOracle[] memory oracles
     ) internal {
-      // TODO 
-      emit AddedPrimarySource(token, maxPriceDeviation, oracles);
+        // do we need set an upper bound on the number of sources?
+        // if so, we need to check that the number of sources is less than the upper bound
+        primarySourceCount[token] = oracles.length;
+        maxPriceDeviations[token] = maxPriceDeviation;
+        for (uint256 idx = 0; idx < oracles.length; idx++) {
+            primarySources[token][idx] = oracles[idx];
+        }
+        emit AddedPrimarySource(token, maxPriceDeviation, oracles);
     }
 }

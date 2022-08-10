@@ -14,4 +14,7 @@ interface IConcaveOracle {
         external
         view
         returns (uint256, uint256);
+
+    // support token or not
+    function support(address token) external view returns (bool);
 }
