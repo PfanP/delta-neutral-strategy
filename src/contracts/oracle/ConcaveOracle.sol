@@ -18,7 +18,7 @@ contract ConcaveOracle is IBaseOracle, Governable {
     uint256 public constant MAX_PRICE_DEVIATION = 1.5e18; // max price deviation
     uint256 public constant MAX_SOURCE_COUNT = 3; // max number of sources
 
-    function initialize() public initializer {
+    constructor() public initializer {
         __Governable__init();
     }
 
