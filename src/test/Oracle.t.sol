@@ -40,6 +40,7 @@ contract OracleTest is Test {
         deviations[1] = 1e18;
         deviations[2] = 1e18;
         deviations[3] = 1e18;
+
         // define oracles array
         IBaseOracle[][] memory oracles = new IBaseOracle[][](4);
         oracles[0] = new IBaseOracle[](1);
@@ -121,5 +122,9 @@ contract OracleTest is Test {
         emit log_uint(prices[2]);
         emit log_uint(prices[3]);
         emit log_uint(prices[4]);
+        assert(prices[0] <= prices[1]);
+        assert(prices[1] <= prices[2]);
+        assert(prices[2] <= prices[3]);
+        assert(prices[3] <= prices[4]);
     }
 }
