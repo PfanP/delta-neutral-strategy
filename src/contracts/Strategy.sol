@@ -113,23 +113,30 @@ contract Strategy is BaseStrategy, HomoraFarmHandler {
     // * Prepare for the DN rebalancing // 
     // * No Harvesting from the Farms, save on some gas. 
     // * 
+    // * When tending always pay back the amount the vault wants in debtOutstanding\
+    // * Profits and losses are the figures since the last report 
     // debtOutstanding is how much the vault expects the strategy to pay back
     function prepareRebalance(uint256 _debtOutstanding) 
         internal 
         override
         returns (
-            uint256 _profit,
-            uint256 _loss,
-            uint256 _debtPayment
-        )
-    {
-        // Pay back the vault when the debt limit goes down?
-        // Need to estimate profit or losses according to the Homora View functions 
+            uint256 _profit, // Gain goes towards totalAvail
+            uint256 _loss, // Loss results in less debt ratio and less locked profit
+            uint256 _debtPayment // in the vault report() function: Min(debtOutstanding, debtPayment)
+        ) 
+    {   // totalAvail = profit + debtpayment | creditAvail = how much the vault is under debt limit | Only looks at the harvest pot
 
+        // Pay back the vault when the debt limit goes down - yes
         // Take more money from the vault? - No that is taken care of in def report()
+        uint256 totalAssets = estimatedTotalAssets();
+        uint256 totalDebt   = vault.strategies(address(this)).totalDebt;
 
-        uint256 totalDebt = vault.strategies(address(this)).totalDebt;
-
+        if (totalAssets > totalDebt) {
+            _profit = totalAssets - totalDebt;
+        } else {
+            _loss = totalDebt - totalAssets;
+        }
+        _debtPayment = _debtOutstanding;
     }
 
     // Add: Function to change the farm leverage // TODO 
