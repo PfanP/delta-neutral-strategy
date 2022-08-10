@@ -3,16 +3,9 @@ pragma solidity ^0.8.12;
 pragma experimental ABIEncoderV2;
 
 import "../../interfaces/IHomoraBank.sol";
-<<<<<<< HEAD
 import "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 import "../../interfaces/IWMasterChef.sol";
 import "../../interfaces/IHomoraSushiSpell.sol";
-=======
-import "../../interfaces/IBaseOracle.sol";
-import '@openzeppelin/contracts/token/ERC20/IERC20.sol';
-import '../../interfaces/IWMasterChef.sol';
-import '../../interfaces/IHomoraSushiSpell.sol';
->>>>>>> 8e4a70b (fix: HarvestValue)
 import {DopeAssMathLib} from "../../../lib/dn-chad-math/DopeAssMathLib.sol";
 
 /// @title The interface for Alpha Homora Leveraged Yield Farms

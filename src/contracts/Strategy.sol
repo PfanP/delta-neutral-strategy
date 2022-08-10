@@ -45,9 +45,9 @@ contract Strategy is BaseStrategy, HomoraFarmHandler {
         address _vault,
         address _homoraBank,
         address _sushiSwapSpell,
+        address _swapper,
         address _token0,
         address _token1,
-        address _swapper,
         uint _farmLeverage
     ) BaseStrategy(_vault) 
     HomoraFarmHandler(_homoraBank, _sushiSwapSpell) 
