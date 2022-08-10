@@ -112,7 +112,8 @@ library DeltaNeutralMathLib {
 
     function longEquityRebalance(
         DeltaNeutralMetadata memory data,
-        uint256 desiredAdjustment
+        uint256 desiredAdjustment,
+        uint256 debtOutstanding // This is the amount to pay back the vault
     ) internal pure returns (uint256 longEquityAdd, bool addToPosition) {
         // Boolean - True: Add to the position | False: Take from the position
         return data.longEquityValue < desiredAdjustment ?
@@ -122,7 +123,8 @@ library DeltaNeutralMathLib {
 
     function shortEquityRebalance(
         DeltaNeutralMetadata memory data,
-        uint256 desiredAdjustment
+        uint256 desiredAdjustment,
+        uint256 debtOutstanding
     ) internal pure returns (uint256 shortEquityAdd, bool addToPosition) {
         // Boolean - True: Add to the position | False: Take from the position
         uint256 adjustmentTimesLeverage = desiredAdjustment.mulWad(data.leverageValue);
@@ -134,7 +136,8 @@ library DeltaNeutralMathLib {
 
     function shortLoanRebalance(
         DeltaNeutralMetadata memory data,
-        uint256 desiredAdjustment
+        uint256 desiredAdjustment,
+        uint256 debtOutstanding
     ) internal pure returns (uint256 shortLoanAdd, bool addToPosition) {
         // Boolean - True: Add to the position | False: Take from the position
         uint256 leverageValueSquared = data.leverageValue.mulWad(data.leverageValue);
@@ -147,7 +150,8 @@ library DeltaNeutralMathLib {
 
     function longLoanRebalance(
         DeltaNeutralMetadata memory data,
-        uint256 desiredAdjustment
+        uint256 desiredAdjustment,
+        uint256 debtOutstanding
     ) internal pure returns (uint256 longLoanAdd, bool addToPosition) {
         // Boolean - True: Add to the position | False: Take from the position
         uint256 adjustmentTimesLeverage = desiredAdjustment.mulWad(data.leverageValue);
