@@ -5,7 +5,7 @@ pragma abicoder v2;
 import {IERC20} from "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 import {SafeERC20} from "@openzeppelin/contracts/token/ERC20/utils/SafeERC20.sol";
 import {ExtendedTest} from "./ExtendedTest.sol";
-import {Vm} from "forge-std/Vm.sol";
+import {Vm} from "../../../lib/forge-std/src/Vm.sol";
 import {IVault} from "../../interfaces/IVault.sol";
 import "../../../utils/VyperDeployer.sol";
 

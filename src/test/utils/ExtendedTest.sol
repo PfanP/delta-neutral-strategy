@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: AGPL-3.0
 pragma solidity ^0.8.12;
 
-import {Test} from "forge-std/Test.sol";
+import {Test} from "../../../lib/forge-std/src/Test.sol";
 
 contract ExtendedTest is Test {
     // solhint-disable-next-line
