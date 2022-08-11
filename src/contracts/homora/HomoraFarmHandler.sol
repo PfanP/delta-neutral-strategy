@@ -121,15 +121,16 @@ abstract contract HomoraFarmHandler {
         uint256 amtLPTake,
         uint256 amtLPWithdraw,
         uint256 repayAmtToken0,
-        uint256 repayAmtToken1
+        uint256 repayAmtToken1,
+        uint256 amountLPRepay
     ) public {
         RepayAmounts memory amtData = RepayAmounts(
             amtLPTake,
             amtLPWithdraw,
             repayAmtToken0,
             repayAmtToken1,
-            0, // No repay of LP
-            0, // Token 0 and 1 mins are 0
+            amountLPRepay,
+            0, // Token 0 and 1 mins are slippage control
             0
         );
 

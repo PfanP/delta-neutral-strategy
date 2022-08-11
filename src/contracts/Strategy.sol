@@ -14,6 +14,7 @@ import {HomoraFarmHandler} from "../contracts/homora/HomoraFarmHandler.sol";
 // These are the core Yearn libraries
 import {BaseStrategy, StrategyParams} from "./yearn/BaseStrategy.sol";
 import "../interfaces/IHomoraFarmHandler.sol";
+import "../interfaces/oracle/IConcaveOracle.sol";
 
 import {Address} from "@openzeppelin/contracts/utils/Address.sol";
 import {IERC20} from "@openzeppelin/contracts/token/ERC20/IERC20.sol";
@@ -26,6 +27,8 @@ contract Strategy is BaseStrategy, HomoraFarmHandler {
     using SafeERC20 for IERC20;
     using Address for address;
     using DeltaNeutralMathLib for DeltaNeutralMetadata;
+
+    uint private constant MULTIPLIER = 10000; // (10000 = 100% = 1)
 
     // The token pairs which will go into the Homora Farm
     address public homoraFarmHandler;
@@ -113,23 +116,30 @@ contract Strategy is BaseStrategy, HomoraFarmHandler {
     // * Prepare for the DN rebalancing // 
     // * No Harvesting from the Farms, save on some gas. 
     // * 
+    // * When tending always pay back the amount the vault wants in debtOutstanding\
+    // * Profits and losses are the figures since the last report 
     // debtOutstanding is how much the vault expects the strategy to pay back
     function prepareRebalance(uint256 _debtOutstanding) 
         internal 
         override
         returns (
-            uint256 _profit,
-            uint256 _loss,
-            uint256 _debtPayment
-        )
-    {
-        // Pay back the vault when the debt limit goes down?
-        // Need to estimate profit or losses according to the Homora View functions 
+            uint256 _profit, // Gain goes towards totalAvail
+            uint256 _loss, // Loss results in less debt ratio and less locked profit
+            uint256 _debtPayment // in the vault report() function: Min(debtOutstanding, debtPayment)
+        ) 
+    {   // totalAvail = profit + debtpayment | creditAvail = how much the vault is under debt limit | Only looks at the harvest pot
 
+        // Pay back the vault when the debt limit goes down - yes
         // Take more money from the vault? - No that is taken care of in def report()
+        uint256 totalAssets = estimatedTotalAssets();
+        uint256 totalDebt   = vault.strategies(address(this)).totalDebt;
 
-        uint256 totalDebt = vault.strategies(address(this)).totalDebt;
-
+        if (totalAssets > totalDebt) {
+            _profit = totalAssets - totalDebt;
+        } else {
+            _loss = totalDebt - totalAssets;
+        }
+        _debtPayment = _debtOutstanding;
     }
 
     // Add: Function to change the farm leverage // TODO 
@@ -140,33 +150,35 @@ contract Strategy is BaseStrategy, HomoraFarmHandler {
         // TODO: Do something to invest excess `want` tokens (from the Vault) into your positions
         // NOTE: Try to adjust positions so that `_debtOutstanding` can be freed up on *next* harvest (not immediately)
         
-        // Balance of the free tokens in the strategy
-        // uint256 freeTokens = want.balanceOf(address(this));
-        // Call a harvest and add the harvest to the free token balance
+        DeltaNeutralMetadata memory data;
 
-        // Values in ETH
-        uint longLoanValue    = getBorrowETHValue(longPositionId);
-        uint shortLoanValue   = getBorrowETHValue(shortPositionId);
-        uint longEquityValue  = getCollateralETHValue(longPositionId) - longLoanValue;
-        uint shortEquityValue = getCollateralETHValue(shortPositionId) - shortLoanValue;
+        {
+            // Values in ETH
+            uint256 longLoanValue    = getBorrowETHValue(longPositionId);
+            uint256 shortLoanValue   = getBorrowETHValue(shortPositionId);
+            uint256 longEquityValue  = getCollateralETHValue(longPositionId) - longLoanValue;
+            uint256 shortEquityValue = getCollateralETHValue(shortPositionId) - shortLoanValue;
 
-        DeltaNeutralMetadata memory data = DeltaNeutralMetadata(
-            longEquityValue,
-            longLoanValue,
-            shortEquityValue,
-            shortLoanValue,
-            0,  // No harvest in tend function
-            farmLeverage
-        );
+            data = DeltaNeutralMetadata(
+                longEquityValue,
+                longLoanValue,
+                shortEquityValue,
+                shortLoanValue,
+                0,  // No harvest in tend function
+                farmLeverage
+            );
+        }
         
         // All values here valuated in ETH
-        uint desiredAdjustment = data.getDesiredAdjustment();
-        (uint longPositionEquityAdjust, bool addToLongEquity) = data.longEquityRebalance(desiredAdjustment);
-        (uint longPositionLoanAdjust, bool addToLongLoan) = data.longLoanRebalance(desiredAdjustment);
-        (uint shortPositionEquityAdjust, bool addToShortEquity) = data.shortEquityRebalance(desiredAdjustment);
-        (uint shortPositionLoanAdjust, bool addToShortLoan) = data.shortLoanRebalance(desiredAdjustment);
+        uint256 desiredAdjustment = data.getDesiredAdjustment();
+        (uint256 longPositionEquityAdjust, bool addToLongEquity) = data.longEquityRebalance(desiredAdjustment, _debtOutstanding);
+        (uint256 longPositionLoanAdjust, bool addToLongLoan) = data.longLoanRebalance(desiredAdjustment, _debtOutstanding);
+        (uint256 shortPositionEquityAdjust, bool addToShortEquity) = data.shortEquityRebalance(desiredAdjustment, _debtOutstanding);
+        (uint256 shortPositionLoanAdjust, bool addToShortLoan) = data.shortLoanRebalance(desiredAdjustment, _debtOutstanding);
 
-        // Need to convert the ETH values to token values using the oracle Impl
+        // TODO: Need to convert the ETH values to token values using the oracle Impl
+        //uint256 longPositionEquityToken1 = ;
+
 
         // One position will need reduction, the other will need addition
         // Call Reduce Position
@@ -174,7 +186,7 @@ contract Strategy is BaseStrategy, HomoraFarmHandler {
 
         // Call Add Position
         // Position Long
-        uint longPositionIdReturn = openOrIncreasePositionSushiswap(
+        uint256 longPositionIdReturn = openOrIncreasePositionSushiswap(
                 longPositionId, 
                 token0,
                 token1,
@@ -189,7 +201,7 @@ contract Strategy is BaseStrategy, HomoraFarmHandler {
         // This farm is underlevereaged now
 
         // Position Two
-        uint shortPositionIdReturn = openOrIncreasePositionSushiswap(
+        uint256 shortPositionIdReturn = openOrIncreasePositionSushiswap(
                 shortPositionId, 
                 token0,
                 token1,
@@ -289,19 +301,102 @@ contract Strategy is BaseStrategy, HomoraFarmHandler {
         // NOTE: Maintain invariant `want.balanceOf(this) >= _liquidatedAmount`
         // NOTE: Maintain invariant `_liquidatedAmount + _loss <= _amountNeeded`
 
-        uint256 totalAssets = want.balanceOf(address(this));
+        uint256 totalAssets = estimatedTotalAssets();
+        uint256 lpRemoveProportion = 0;
+
         if (_amountNeeded > totalAssets) {
             _liquidatedAmount = totalAssets;
+            lpRemoveProportion = MULTIPLIER; // 100%
             unchecked {
                 _loss = _amountNeeded - totalAssets;
             }
         } else {
             _liquidatedAmount = _amountNeeded;
+            lpRemoveProportion = _liquidatedAmount * MULTIPLIER / totalAssets;
         }
+
+        // Remove the LPs in proportion to _amountNeeded / totalAssets
+        // (50% from the long position, 50% from the short position)
+
+        uint256 longLpTokenAmount = 0;
+        uint256 shortLpTokenAmount = 0;
+        
+        (,,,longLpTokenAmount) = getPositionInfo(longPositionId);
+        (,,,shortLpTokenAmount) = getPositionInfo(shortPositionId);
+
+        // Payment of debts is in proportion to the farm leverage
+
+        uint256 removeLongLpAmount = longLpTokenAmount * lpRemoveProportion / (2 * MULTIPLIER);
+        uint256 removeShortLpAmount = shortLpTokenAmount * lpRemoveProportion / (2 * MULTIPLIER);
+
+        // AmtTake should be equal to AmtWithdraw - if they're unequal we would
+        // End up with LP tokens instead of token0 and token1
+        // Do a full repay on the position
+        reducePositionSushiswap(
+            longPositionId, 
+            token0, 
+            token1, 
+            removeLongLpAmount,  //amtTake
+            removeLongLpAmount,  //amtWithdraw
+            0, 
+            0, // Repay the amounts in LP Token
+            (removeLongLpAmount - removeLongLpAmount / farmLeverage)
+        );
+
+        reducePositionSushiswap(
+            shortPositionId, 
+            token0, 
+            token1, 
+            removeShortLpAmount, //amtTake
+            removeShortLpAmount, //amtWithdraw
+            0, 
+            0,
+            (removeShortLpAmount - removeLongLpAmount / farmLeverage)
+        );
+
+        // TODO: swap the token 1 into token 0 here
+
     }
 
     function liquidateAllPositions() internal override returns (uint256) {
         // TODO: Liquidate all positions and return the amount freed.
+        // Ask Homora if there is a simpler liquidate all function to run
+        
+        (, , , uint longLpTokenAmount) = getPositionInfo(longPositionId);
+        (, , , uint shortLpTokenAmount) = getPositionInfo(shortPositionId);
+        
+        uint[] memory longDebtAmounts = new uint[](2);
+        uint[] memory shortDebtAmounts = new uint[](2);
+        (,longDebtAmounts) = getPositionDebts(longPositionId);
+        (,shortDebtAmounts) = getPositionDebts(shortPositionId);
+
+        // AmtTake should be equal to AmtWithdraw - if they're unequal we would
+        // End up with LP tokens instead of token0 and token1
+        // Do a full repay on the position
+        reducePositionSushiswap(
+            longPositionId, 
+            token0, 
+            token1, 
+            longLpTokenAmount,  //amtTake
+            longLpTokenAmount,  //amtWithdraw
+            longDebtAmounts[0], 
+            longDebtAmounts[1],
+            0 // No LP Repay
+        );
+
+        reducePositionSushiswap(
+            shortPositionId, 
+            token0, 
+            token1, 
+            shortLpTokenAmount, //amtTake
+            shortLpTokenAmount, //amtWithdraw
+            shortDebtAmounts[0], 
+            shortDebtAmounts[1],
+            0 // No LP Repay
+        );
+
+        // TODO: swap the token 1 into token 0 here
+
         return want.balanceOf(address(this));
     }
 
