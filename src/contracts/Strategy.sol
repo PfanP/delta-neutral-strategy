@@ -150,20 +150,24 @@ contract Strategy is BaseStrategy, HomoraFarmHandler {
         // TODO: Do something to invest excess `want` tokens (from the Vault) into your positions
         // NOTE: Try to adjust positions so that `_debtOutstanding` can be freed up on *next* harvest (not immediately)
         
-        // Values in ETH
-        uint256 longLoanValue    = getBorrowETHValue(longPositionId);
-        uint256 shortLoanValue   = getBorrowETHValue(shortPositionId);
-        uint256 longEquityValue  = getCollateralETHValue(longPositionId) - longLoanValue;
-        uint256 shortEquityValue = getCollateralETHValue(shortPositionId) - shortLoanValue;
+        DeltaNeutralMetadata memory data;
 
-        DeltaNeutralMetadata memory data = DeltaNeutralMetadata(
-            longEquityValue,
-            longLoanValue,
-            shortEquityValue,
-            shortLoanValue,
-            0,  // No harvest in tend function
-            farmLeverage
-        );
+        {
+            // Values in ETH
+            uint256 longLoanValue    = getBorrowETHValue(longPositionId);
+            uint256 shortLoanValue   = getBorrowETHValue(shortPositionId);
+            uint256 longEquityValue  = getCollateralETHValue(longPositionId) - longLoanValue;
+            uint256 shortEquityValue = getCollateralETHValue(shortPositionId) - shortLoanValue;
+
+            data = DeltaNeutralMetadata(
+                longEquityValue,
+                longLoanValue,
+                shortEquityValue,
+                shortLoanValue,
+                0,  // No harvest in tend function
+                farmLeverage
+            );
+        }
         
         // All values here valuated in ETH
         uint256 desiredAdjustment = data.getDesiredAdjustment();

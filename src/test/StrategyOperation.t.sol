@@ -45,7 +45,7 @@ contract StrategyOperationsTest is StrategyFixture {
 
         // tend
         vm.prank(strategist);
-        strategy.tend();
+        strategy.tend(false); // Override mode is the param
 
         vm.prank(user);
         vault.withdraw();
