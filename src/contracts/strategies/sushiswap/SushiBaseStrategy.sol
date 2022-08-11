@@ -14,25 +14,31 @@ contract Strategy is BaseStrategy {
     using SafeERC20 for IERC20;
 
     /// Constant variables for LP management
+    /// @dev V1 - Can it be internal?
     IERC20 public constant reward = IERC20(0x6B3595068778DD592e39A122f4f5a5cF09C90fE2); //The token we farm(Sushi)
     IMasterChef public constant MASTERCHEF = IMasterChef(0xc2EdaD668740f1aA35E4D8f227fB8E17dcA888Cd);
-    IUniswapRouter public ROUTER = IUniswapRouter(0xd9e1cE17f2641f24aE83637ab66a2cca9C378B9F); // SwapRouter Address
+    IUniswapRouter public constant ROUTER = IUniswapRouter(0xd9e1cE17f2641f24aE83637ab66a2cca9C378B9F); // SwapRouter Address
 
-    uint256 public pid; // Pool ID
-    address public immutable token0; // token0 for want(LP) token
-    address public immutable token1; // token1 for want(LP) token
-    ///@dev could be want token
-    address public immutable pair;
+    /// @dev id of the staking pool
+    uint256 internal immutable pid; // Pool ID
+    /// @dev staking LP token's addresses
+    address internal immutable token0; // token0 for want(LP) token
+    address internal immutable token1; // token1 for want(LP) token
+    ///@dev could be want token, or LP token to be used for sushi masterchef
+    address internal immutable pair;
 
+    //////////////////////////////////////////////////////////////////////
+    // CONSTRUCTION
+    //////////////////////////////////////////////////////////////////////
     constructor(
         address _vault,
-        uint256 _pid,
         address _token0,
-        address _token1
-    ) public BaseStrategy(_vault) {
-        pid        = _pid;
+        address _token1,
+        uint256 _pid
+    ) BaseStrategy(_vault) {
         token0     = _token0;
         token1     = _token1;
+        pid        = _pid;
         (pair, , , )    = MASTERCHEF.poolInfo(_pid);
     }
 
@@ -73,6 +79,7 @@ contract Strategy is BaseStrategy {
         _profit = profit - _debtPayment;
     }
 
+    /// @dev deposit _debtOutstanding amount to masterchef
     function adjustPosition(uint256 _debtOutstanding) internal virtual override {
         uint256 _preWant = want.balanceOf(address(this));
         if (_preWant > _debtOutstanding) {
@@ -81,6 +88,11 @@ contract Strategy is BaseStrategy {
             want.approve(address(MASTERCHEF), toDeposit);
             MASTERCHEF.deposit(pid, toDeposit);
         }
+    }
+
+    /// @notice same as adjustPosition
+    function addToPosition(uint256 _debtOutstanding) internal virtual override {
+        adjustPosition(_debtOutstanding);
     }
 
     function liquidatePosition(uint256 _amountNeeded)
@@ -120,7 +132,8 @@ contract Strategy is BaseStrategy {
     function prepareMigration(address _newStrategy) internal virtual override {
         liquidateAllPositions();
     }
-
+    /// @notice Protect tokens from sweeping
+    /// @return Array of the protected tokens
     function protectedTokens()
         internal
         view
@@ -186,15 +199,5 @@ contract Strategy is BaseStrategy {
         IUniswapV2Pair(pair).mint(address(this));
 
         return want.balanceOf(address(this)) - startingWantBalance;
-    }
-
-    function addToPosition(uint256 _debtOutstanding) internal virtual override {
-        uint256 _preWant = want.balanceOf(address(this));
-        if (_preWant > _debtOutstanding) {
-            uint256 toDeposit = _preWant - _debtOutstanding;
-
-            want.approve(address(MASTERCHEF), toDeposit);
-            MASTERCHEF.deposit(pid, toDeposit);
-        }
     }
 }
