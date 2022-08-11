@@ -1,6 +1,6 @@
 // SPDX-License-Identifier: AGPL-3.0
 pragma solidity ^0.8.12;
-import "forge-std/console.sol";
+import "../../lib/forge-std/src/console.sol";
 
 import {StrategyFixture} from "./utils/StrategyFixture.sol";
 import {StrategyParams} from "../interfaces/IVault.sol";
