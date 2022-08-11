@@ -28,6 +28,8 @@ contract Strategy is BaseStrategy, HomoraFarmHandler {
     using Address for address;
     using DeltaNeutralMathLib for DeltaNeutralMetadata;
 
+    uint private constant MULTIPLIER = 10000; // (10000 = 100% = 1)
+
     // The token pairs which will go into the Homora Farm
     address public homoraFarmHandler;
     address private token0; // Token0 is the long token
@@ -296,18 +298,17 @@ contract Strategy is BaseStrategy, HomoraFarmHandler {
         // NOTE: Maintain invariant `_liquidatedAmount + _loss <= _amountNeeded`
 
         uint256 totalAssets = estimatedTotalAssets();
-        uint256 _loss = 0;
         uint256 lpRemoveProportion = 0;
 
         if (_amountNeeded > totalAssets) {
             _liquidatedAmount = totalAssets;
-            //lpRemoveProportion = 100% //TODO: Fill in math here
+            lpRemoveProportion = MULTIPLIER; // 100%
             unchecked {
                 _loss = _amountNeeded - totalAssets;
             }
         } else {
             _liquidatedAmount = _amountNeeded;
-            //lpRemoveProportion = _liquidatedAmount / totalAssets //TODO: Fill in math here
+            lpRemoveProportion = _liquidatedAmount * MULTIPLIER / totalAssets;
         }
 
         // Remove the LPs in proportion to _amountNeeded / totalAssets
@@ -321,9 +322,8 @@ contract Strategy is BaseStrategy, HomoraFarmHandler {
 
         // Payment of debts is in proportion to the farm leverage
 
-        // TODO: Fill in math for the below
-        uint256 removeLongLpAmount = longLpTokenAmount * lpRemoveProportion / 2; //TODO: Fill in math here
-        uint256 removeShortLpAmount = shortLpTokenAmount * lpRemoveProportion /2; //TODO: Fill in math here
+        uint256 removeLongLpAmount = longLpTokenAmount * lpRemoveProportion / (2 * MULTIPLIER);
+        uint256 removeShortLpAmount = shortLpTokenAmount * lpRemoveProportion / (2 * MULTIPLIER);
 
         // AmtTake should be equal to AmtWithdraw - if they're unequal we would
         // End up with LP tokens instead of token0 and token1
@@ -336,7 +336,7 @@ contract Strategy is BaseStrategy, HomoraFarmHandler {
             removeLongLpAmount,  //amtWithdraw
             0, 
             0, // Repay the amounts in LP Token
-            removeLongLpAmount * (1 - 1 / farmLeverage) // TODO: Fill in the math here (This is the repaying of the loan in LP Token)
+            (removeLongLpAmount - removeLongLpAmount / farmLeverage)
         );
 
         reducePositionSushiswap(
@@ -347,7 +347,7 @@ contract Strategy is BaseStrategy, HomoraFarmHandler {
             removeShortLpAmount, //amtWithdraw
             0, 
             0,
-            removeShortLpAmount * (1 - 1 / farmLeverage) // TODO: Fill in the math here (This is the repaying of the loan in LP Token)
+            (removeShortLpAmount - removeLongLpAmount / farmLeverage)
         );
 
         // TODO: swap the token 1 into token 0 here
@@ -358,8 +358,8 @@ contract Strategy is BaseStrategy, HomoraFarmHandler {
         // TODO: Liquidate all positions and return the amount freed.
         // Ask Homora if there is a simpler liquidate all function to run
         
-        (,,,longLpTokenAmount) = getPositionInfo(longPositionId);
-        (,,,shortLpTokenAmount) = getPositionInfo(shortPositionId);
+        (, , , uint longLpTokenAmount) = getPositionInfo(longPositionId);
+        (, , , uint shortLpTokenAmount) = getPositionInfo(shortPositionId);
         
         uint[] memory longDebtAmounts = new uint[](2);
         uint[] memory shortDebtAmounts = new uint[](2);
