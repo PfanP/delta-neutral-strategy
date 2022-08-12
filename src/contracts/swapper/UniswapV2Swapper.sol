@@ -15,38 +15,56 @@ contract UniswapV2Swapper is ISwapperImpl {
     using SafeERC20 for IERC20;
 
     address public uniswapV2Router;
-    address public override tokenIn;
-    address public override tokenOut;
-    address[] public path;
 
-    constructor(
-        address _uniswapV2Router,
+    constructor(address _uniswapV2Router) {
+        uniswapV2Router = _uniswapV2Router;
+    }
+
+    function swap(
         address _tokenIn,
+        uint256 _amountIn,
         address _tokenOut,
-        address[] memory _path
-    ) {
+        address _to
+    ) external override returns (uint256 amountOut) {
+        require(_tokenIn != _tokenOut, "invalid token");
+
+        address[] memory path = new address[](2);
+        path[0] = _tokenIn;
+        path[1] = _tokenOut;
+
+        IERC20(_tokenIn).safeTransferFrom(msg.sender, address(this), _amountIn);
+        IERC20(_tokenIn).safeApprove(uniswapV2Router, _amountIn);
+
+        uint256[] memory amountsOut = IUniswapRouter(uniswapV2Router)
+            .swapExactTokensForTokens(_amountIn, 0, path, _to, block.timestamp);
+
+        return amountsOut[amountsOut.length - 1];
+    }
+
+    function swap(
+        address _tokenIn,
+        uint256 _amountIn,
+        address _tokenOut,
+        address[] memory _path,
+        address _to
+    ) external override returns (uint256 amountOut) {
         require(_tokenIn != _tokenOut, "invalid token");
         require(
             _path[0] == _tokenIn && _path[_path.length - 1] == _tokenOut,
             "invalid path"
         );
 
-        uniswapV2Router = _uniswapV2Router;
-        tokenIn = _tokenIn;
-        tokenOut = _tokenOut;
-        path = _path;
-    }
-
-    function swap(uint256 _amountIn, address _to)
-        external
-        override
-        returns (uint256 amountOut)
-    {
-        IERC20(tokenIn).safeTransferFrom(msg.sender, address(this), _amountIn);
-        IERC20(tokenIn).safeApprove(uniswapV2Router, _amountIn);
+        IERC20(_tokenIn).safeTransferFrom(msg.sender, address(this), _amountIn);
+        IERC20(_tokenIn).safeApprove(uniswapV2Router, _amountIn);
 
         uint256[] memory amountsOut = IUniswapRouter(uniswapV2Router)
-            .swapExactTokensForTokens(_amountIn, 0, path, _to, block.timestamp);
+            .swapExactTokensForTokens(
+                _amountIn,
+                0,
+                _path,
+                _to,
+                block.timestamp
+            );
 
         return amountsOut[amountsOut.length - 1];
     }

@@ -60,6 +60,10 @@ contract Strategy is BaseStrategy, HomoraFarmHandler {
         swapper = _swapper;
         longPositionId = 0;
         shortPositionId = 0;
+
+        // approve tokens to the swapper
+        IERC20(token1).safeApprove(swapper, type(uint256).max);
+        getSushi().safeApprove(swapper, type(uint256).max);
     }
 
     // ******** OVERRIDE THESE METHODS FROM BASE CONTRACT ************
@@ -96,7 +100,7 @@ contract Strategy is BaseStrategy, HomoraFarmHandler {
         harvestSushiswap(shortPositionId);
 
         uint256 amountIn = getSushi().balanceOf(address(this));
-        ISwapperImpl(swapper).swap(amountIn, address(this));
+        ISwapperImpl(swapper).swap(address(getSushi()), amountIn, address(want), address(this));
 
         uint256 totalAssets = estimatedTotalAssets();
         uint256 totalDebt = vault.strategies(address(this)).totalDebt;
@@ -360,8 +364,16 @@ contract Strategy is BaseStrategy, HomoraFarmHandler {
             (removeShortLpAmount - removeLongLpAmount / farmLeverage)
         );
 
-        // TODO: swap the token 1 into token 0 here
-
+        // swap the token 1 into token 0 here
+        uint256 token1Amount = IERC20(token1).balanceOf(address(this));
+        if (token1Amount > 0) {
+            ISwapperImpl(swapper).swap(
+                token1,
+                token1Amount,
+                token0,
+                address(this)
+            );
+        }
     }
 
     function liquidateAllPositions() internal override returns (uint256) {
@@ -401,7 +413,16 @@ contract Strategy is BaseStrategy, HomoraFarmHandler {
             0 // No LP Repay
         );
 
-        // TODO: swap the token 1 into token 0 here
+        // swap the token 1 into token 0 here
+        uint256 token1Amount = IERC20(token1).balanceOf(address(this));
+        if (token1Amount > 0) {
+            ISwapperImpl(swapper).swap(
+                token1,
+                token1Amount,
+                token0,
+                address(this)
+            );
+        }
 
         return want.balanceOf(address(this));
     }

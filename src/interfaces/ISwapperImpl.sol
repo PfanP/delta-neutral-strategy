@@ -5,11 +5,18 @@ pragma solidity ^0.8.12;
 pragma experimental ABIEncoderV2;
 
 interface ISwapperImpl {
-    function tokenIn() external view returns (address);
+    function swap(
+        address _tokenIn,
+        uint256 _amountIn,
+        address _tokenOut,
+        address _to
+    ) external returns (uint256 amountOut);
 
-    function tokenOut() external view returns (address);
-
-    function swap(uint256 _amountIn, address _to)
-        external
-        returns (uint256 amountOut);
+    function swap(
+        address _tokenIn,
+        uint256 _amountIn,
+        address _tokenOut,
+        address[] memory _path,
+        address _to
+    ) external returns (uint256 amountOut);
 }
