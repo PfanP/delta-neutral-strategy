@@ -99,19 +99,21 @@ contract Strategy is BaseStrategy, HomoraFarmHandler {
         harvestSushiswap(longPositionId);
         harvestSushiswap(shortPositionId);
 
+        // swap sushi token into the want token
         uint256 amountIn = getSushi().balanceOf(address(this));
         ISwapperImpl(swapper).swap(address(getSushi()), amountIn, address(want), address(this));
 
         uint256 totalAssets = estimatedTotalAssets();
         uint256 totalDebt = vault.strategies(address(this)).totalDebt;
-        if (totalAssets > _debtOutstanding) {
-            _debtPayment = _debtOutstanding;
-            totalAssets = totalAssets - _debtOutstanding;
-        } else {
-            _debtPayment = totalAssets;
-            totalAssets = 0;
-        }
-        totalDebt = totalDebt - _debtPayment;
+        _debtPayment = 0;
+        // if (totalAssets > _debtOutstanding) {
+        //     _debtPayment = _debtOutstanding;
+        //     totalAssets = totalAssets - _debtOutstanding;
+        // } else {
+        //     _debtPayment = totalAssets;
+        //     totalAssets = 0;
+        // }
+        // totalDebt = totalDebt - _debtPayment;
 
         if (totalAssets > totalDebt) {
             _profit = totalAssets - totalDebt;
