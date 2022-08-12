@@ -1,6 +1,8 @@
 // SPDX-License-Identifier: GPL-2.0-or-later
 pragma solidity ^0.8.0;
 
+import '@openzeppelin/contracts/token/ERC20/IERC20.sol';
+
 /// @title The interface for Alpha Homora Leveraged Yield Farms
 /// @notice Operates positons on Homora farms
 interface IHomoraFarmHandler {
@@ -71,6 +73,9 @@ interface IHomoraFarmHandler {
         external
         view
         returns (uint256);
+        
+    /// @dev Return the sushi token from the master chef
+    function getSushi() external view returns (IERC20);
 
     // Sushiswap get pending rewards
     function getPendingRewardForSushiswap(uint256 _positionId)
@@ -85,4 +90,8 @@ interface IHomoraFarmHandler {
     /// @dev Return the total borrow value of the given position in ETH.
     /// @param positionId The position ID to query for the borrow value.
     function getBorrowETHValue(uint positionId) external view returns (uint);
+
+    /// @dev Return the value of the given input as ETH per unit, multiplied by 2**112.
+    /// @param token The ERC-20 token to check the value.
+    function getETHPx(address token) external view returns (uint);
 }

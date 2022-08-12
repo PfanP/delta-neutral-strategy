@@ -33,6 +33,7 @@ contract StrategyFixture is ExtendedTest {
     address sushiSwapSpell = 0x0000000000000000000000000000000000000000;
     address token0 = 0x0000000000000000000000000000000000000000;
     address token1 = 0x0000000000000000000000000000000000000000;
+    address swapper = 0x0000000000000000000000000000000000000000;
     uint farmLeverage = 3;
 
     address public gov = 0xFEB4acf3df3cDEA7399794D0869ef76A6EfAff52;
@@ -159,6 +160,7 @@ contract StrategyFixture is ExtendedTest {
             _vault,
             homoraBank,
             sushiSwapSpell,
+            swapper,
             token0,
             token1,
             farmLeverage
