@@ -174,21 +174,41 @@ contract Strategy is BaseStrategy, HomoraFarmHandler {
         }
         
         // All values here valuated in ETH
-        uint256 desiredAdjustment = data.getDesiredAdjustment();
-        (uint256 longPositionEquityAdjust, bool addToLongEquity) = data.longEquityRebalance(desiredAdjustment, _debtOutstanding);
-        (uint256 longPositionLoanAdjust, bool addToLongLoan) = data.longLoanRebalance(desiredAdjustment, _debtOutstanding);
-        (uint256 shortPositionEquityAdjust, bool addToShortEquity) = data.shortEquityRebalance(desiredAdjustment, _debtOutstanding);
-        (uint256 shortPositionLoanAdjust, bool addToShortLoan) = data.shortLoanRebalance(desiredAdjustment, _debtOutstanding);
+        uint256 desiredAdjustment = data.getDesiredAdjustment(_debtOutstanding); 
+
+        (uint256 longPositionEquityAdjust, bool addToLongEquity) = data.longEquityRebalanceTarget(desiredAdjustment);
+        (uint256 longPositionLoanAdjust, bool addToLongLoan) = data.longLoanRebalanceTarget(desiredAdjustment);
+        (uint256 shortPositionEquityAdjust, bool addToShortEquity) = data.shortEquityRebalanceTarget(desiredAdjustment);
+        (uint256 shortPositionLoanAdjust, bool addToShortLoan) = data.shortLoanRebalanceTarget(desiredAdjustment);
 
         
         // TODO: Apply the ORACLE and reduce variables
-        // TODO: Ask DIO about the mulWAD
-        uint256 longPositionEquityToken1 = longPositionEquityAdjust.mulWAD(
+        // TODO: Check the mulWAD
+        uint256 longPositionEquityToken0 = longPositionEquityAdjust.mulWAD(
             IConcaveOracle(concaveOracle).getPrice(
                 ethTokenAddress, 
                 token0
             )
         );
+        uint256 longPositionLoanToken0 = longPositionLoanAdjust.mulWAD(
+            IConcaveOracle(concaveOracle).getPrice(
+                ethTokenAddress, 
+                token0
+            )
+        );
+        uint256 shortPositionEquityToken0 = shortPositionEquityAdjust.mulWAD(
+            IConcaveOracle(concaveOracle).getPrice(
+                ethTokenAddress, 
+                token0
+            )
+        );
+        uint256 shortPositionLoanToken1 = shortPositionLoanAdjust.mulWAD(
+            IConcaveOracle(concaveOracle).getPrice(
+                ethTokenAddress, 
+                token1
+            )
+        );
+
 
 
         // One position will need reduction, the other will need addition
