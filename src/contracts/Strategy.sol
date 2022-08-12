@@ -32,6 +32,8 @@ contract Strategy is BaseStrategy, HomoraFarmHandler {
 
     // The token pairs which will go into the Homora Farm
     address public homoraFarmHandler;
+    address public concaveOracle;
+    address public ethTokenAddress;
     address private token0; // Token0 is the long token
     address private token1; // Token1 is the shorted token
     uint private farmLeverage;
@@ -45,7 +47,8 @@ contract Strategy is BaseStrategy, HomoraFarmHandler {
         address _sushiSwapSpell,
         address _token0,
         address _token1,
-        uint _farmLeverage
+        uint _farmLeverage,
+        address _concaveOracle
     ) BaseStrategy(_vault) 
     HomoraFarmHandler(_homoraBank, _sushiSwapSpell) 
     {
@@ -59,6 +62,7 @@ contract Strategy is BaseStrategy, HomoraFarmHandler {
         farmLeverage = _farmLeverage;
         longPositionId = 0;
         shortPositionId = 0;
+        concaveOracle = _concaveOracle;
     }
 
     // ******** OVERRIDE THESE METHODS FROM BASE CONTRACT ************
@@ -176,17 +180,34 @@ contract Strategy is BaseStrategy, HomoraFarmHandler {
         (uint256 shortPositionEquityAdjust, bool addToShortEquity) = data.shortEquityRebalance(desiredAdjustment, _debtOutstanding);
         (uint256 shortPositionLoanAdjust, bool addToShortLoan) = data.shortLoanRebalance(desiredAdjustment, _debtOutstanding);
 
-        // TODO: Need to convert the ETH values to token values using the oracle Impl
-        //uint256 longPositionEquityToken1 = ;
+        
+        // TODO: Apply the ORACLE and reduce variables
+        // TODO: Ask DIO about the mulWAD
+        uint256 longPositionEquityToken1 = longPositionEquityAdjust.mulWAD(
+            IConcaveOracle(concaveOracle).getPrice(
+                ethTokenAddress, 
+                token0
+            )
+        );
 
 
         // One position will need reduction, the other will need addition
         // Call Reduce Position
-
+        /*
+        reducePositionSushiswap(
+            shortPositionId, 
+            token0, 
+            token1, 
+            shortLpTokenAmount, //amtTake
+            shortLpTokenAmount, //amtWithdraw
+            shortDebtAmounts[0], 
+            shortDebtAmounts[1],
+            0 // No LP Repay
+        ); */ 
 
         // Call Add Position
         // Position Long
-        uint256 longPositionIdReturn = openOrIncreasePositionSushiswap(
+        openOrIncreasePositionSushiswap(
                 longPositionId, 
                 token0,
                 token1,
@@ -197,21 +218,12 @@ contract Strategy is BaseStrategy, HomoraFarmHandler {
                 0, // 0 Borrrow of token1
                 0 // Place in the Sushiswap PID
         );
-        // Rebalancing: Say Eth price goes up
-        // This farm is underlevereaged now
+        
 
-        // Position Two
-        uint256 shortPositionIdReturn = openOrIncreasePositionSushiswap(
-                shortPositionId, 
-                token0,
-                token1,
-                shortPositionEquityAdjust,
-                0,
-                0, // 0 Supply of LP
-                0, // 0 Borrow of token0
-                shortPositionLoanAdjust,
-                0 // Place in the Sushiswap PID
-        );
+
+        // Rebalancing: Say Eth price goes up
+        // This short farm is underlevereaged now
+
         // This farm is overleveraged in the case ETH price goes up
         // Need to move funds from this position into long position 
         // Harvesting: 2 goals: (1) Maintain ratio of the base assets in the positions
@@ -225,11 +237,6 @@ contract Strategy is BaseStrategy, HomoraFarmHandler {
         // Rebalance calcs & mechanism also on chain
         // Condition detection can happen off chain in a bot
 
-        // Update the position IDs if opening new DN positions
-        if (longPositionId == 0 && shortPositionId == 0) {
-            longPositionId = longPositionIdReturn;
-            shortPositionId = shortPositionIdReturn;
-        } 
 
     }
 
