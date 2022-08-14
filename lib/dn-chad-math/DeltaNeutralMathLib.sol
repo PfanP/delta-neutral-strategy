@@ -18,7 +18,7 @@ library DeltaNeutralMathLib {
 
     function getDesiredAdjustment(
         DeltaNeutralMetadata memory data,
-        debtPayment
+        uint256 debtPayment
     ) internal pure returns (uint256 desiredAdjustment) {
         
         //           / lEv + sEv + hV \

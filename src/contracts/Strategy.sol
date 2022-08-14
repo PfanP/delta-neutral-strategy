@@ -7,6 +7,7 @@ pragma experimental ABIEncoderV2;
 // DN Math Library
 import {DeltaNeutralMathLib} from "../../lib/dn-chad-math/DeltaNeutralMathLib.sol";
 import {DeltaNeutralMetadata} from "../../lib/dn-chad-math/DeltaNeutralMathLib.sol";
+import "../../lib/dn-chad-math/DopeAssMathLib.sol";
 
 // Import Homora Farm Functions
 import {HomoraFarmHandler} from "../contracts/homora/HomoraFarmHandler.sol";
@@ -27,6 +28,7 @@ contract Strategy is BaseStrategy, HomoraFarmHandler {
     using SafeERC20 for IERC20;
     using Address for address;
     using DeltaNeutralMathLib for DeltaNeutralMetadata;
+    using DopeAssMathLib for uint256;
 
     uint private constant MULTIPLIER = 10000; // (10000 = 100% = 1)
 
@@ -155,42 +157,40 @@ contract Strategy is BaseStrategy, HomoraFarmHandler {
         // NOTE: Try to adjust positions so that `_debtOutstanding` can be freed up on *next* harvest (not immediately)
         
         DeltaNeutralMetadata memory data;
+        
+        // Values in ETH
+        uint256 longLoanValue    = getBorrowETHValue(longPositionId);
+        uint256 shortLoanValue   = getBorrowETHValue(shortPositionId);
+        uint256 longEquityValue  = getCollateralETHValue(longPositionId) - longLoanValue;
+        uint256 shortEquityValue = getCollateralETHValue(shortPositionId) - shortLoanValue;
 
-        {
-            // Values in ETH
-            uint256 longLoanValue    = getBorrowETHValue(longPositionId);
-            uint256 shortLoanValue   = getBorrowETHValue(shortPositionId);
-            uint256 longEquityValue  = getCollateralETHValue(longPositionId) - longLoanValue;
-            uint256 shortEquityValue = getCollateralETHValue(shortPositionId) - shortLoanValue;
-
-            data = DeltaNeutralMetadata(
-                longEquityValue,
-                longLoanValue,
-                shortEquityValue,
-                shortLoanValue,
-                0,  // No harvest in tend function
-                farmLeverage
-            );
-        }
+        data = DeltaNeutralMetadata(
+            longEquityValue,
+            longLoanValue,
+            shortEquityValue,
+            shortLoanValue,
+            0,  // No harvest in tend function
+            farmLeverage
+        );
         
         // All values here valuated in ETH
         uint256 desiredAdjustment = data.getDesiredAdjustment(_debtOutstanding); 
 
-        (uint256 longPositionEquityAdjust, bool addToLongEquity) = data.longEquityRebalanceTarget(desiredAdjustment);
-        (uint256 longPositionLoanAdjust, bool addToLongLoan) = data.longLoanRebalanceTarget(desiredAdjustment);
-        (uint256 shortPositionEquityAdjust, bool addToShortEquity) = data.shortEquityRebalanceTarget(desiredAdjustment);
-        (uint256 shortPositionLoanAdjust, bool addToShortLoan) = data.shortLoanRebalanceTarget(desiredAdjustment);
+        (uint256 longEquityTarget, bool addToLongEquity) = data.longEquityRebalanceTarget(desiredAdjustment);
+        (uint256 longLoanTarget, bool addToLongLoan) = data.longLoanRebalanceTarget(desiredAdjustment);
+        (uint256 shortEquityTarget, bool addToShortEquity) = data.shortEquityRebalanceTarget(desiredAdjustment);
+        (uint256 shortLoanTarget, bool addToShortLoan) = data.shortLoanRebalanceTarget(desiredAdjustment);
 
         
         // TODO: Apply the ORACLE and reduce variables
         // TODO: Check the mulWAD
-        uint256 longPositionEquityToken0 = longPositionEquityAdjust.mulWAD(
+        uint256 longPositionEquityToken0 = longEquityTarget.mulWad(
             IConcaveOracle(concaveOracle).getPrice(
                 ethTokenAddress, 
                 token0
             )
         );
-        uint256 longPositionLoanToken0 = longPositionLoanAdjust.mulWAD(
+        uint256 longPositionLoanToken0 = longPositionLoanAdjust.mulWad(
             IConcaveOracle(concaveOracle).getPrice(
                 ethTokenAddress, 
                 token0
@@ -208,37 +208,101 @@ contract Strategy is BaseStrategy, HomoraFarmHandler {
                 token1
             )
         );
+        
+        // ACTIONS: 
+        // 1. Reduce Position 0 and Payback loan as necessary
+        // 2. Reduce Position 1 and Payback loan as necessary
+        // 3. Payback loan on Position 0 again as necessary
+        // 4. Increase loan on position 0 if needed
+        // 5. Increase loan on position 1 if needed
 
+        // Get Position LP Amounts
+        (,,,uint256 longLpTokenAmount) = getPositionInfo(longPositionId);
+        (,,,uint256 shortLpTokenAmount) = getPositionInfo(shortPositionId);
 
+        //// ACTION 1 ////
 
-        // One position will need reduction, the other will need addition
-        // Call Reduce Position
-        /*
+        // Calculate the Proportion of LP that corresponds to the percentage 
+        uint256 longLpRemove = longLpTokenAmount * ((longEquityValue - longEquityTarget) / longEquityValue); 
+        // Calculate the loan payback in LP units
+        uint lpLoanPayback = (longLoanValue - longLoanTarget) / longLoanValue;
+        
+        // LP Remove and Loan Pay on long Pos
+        reducePositionSushiswap(
+            longPositionId, 
+            token0, 
+            token1, 
+            longLpRemove, //amtTake
+            0, //amtWithdraw = 0 because we want to keep the LP tokens
+            0, // Repay token0
+            0, // Repay token1
+            longLpLoanPayback // Repay in LP amounts
+        ); 
+
+        //// ACTION 2 ////
+
+        uint shortLpRemove = shortLpTokenAmount * ((shortEquityValue - shortEquityTarget) / shortEquityValue); 
+        uint shortLpLoanPayback = (shortLoanValue - shortLoanTarget) / shortLoanValue;
+
+        // LP Remove and Loan Pay on short Pos
         reducePositionSushiswap(
             shortPositionId, 
             token0, 
             token1, 
-            shortLpTokenAmount, //amtTake
-            shortLpTokenAmount, //amtWithdraw
-            shortDebtAmounts[0], 
-            shortDebtAmounts[1],
-            0 // No LP Repay
-        ); */ 
+            shortLpRemove, //amtTake
+            0, //amtWithdraw = 0 because we want to keep the LP tokens
+            0, // Repay token0
+            0, // Repay token1
+            shortLpLoanPayback // Repay in LP amounts
+        ); 
 
-        // Call Add Position
-        // Position Long
-        openOrIncreasePositionSushiswap(
+        ///// ACTION 3 /////
+        uint remainderLPBalance = self.LPBalance; 
+        // Do another payback on the longLoanPosition
+        if (remainderLPBalance > 0) {
+            reducePositionSushiswap(
                 longPositionId, 
-                token0,
-                token1,
-                longPositionEquityAdjust, // amountToken0
-                0, // amountToken1 will be 0
-                0, // 0 LP Supplied
-                longPositionLoanAdjust,
-                0, // 0 Borrrow of token1
-                0 // Place in the Sushiswap PID
+                token0, 
+                token1, 
+                0, //amtTake
+                0, //amtWithdraw = 0 because we want to keep the LP tokens
+                0, // Repay token0
+                0, // Repay token1
+                remainderLPBalance // Repay in LP amounts
+            ); 
+        }
+
+        ///// ACTION 4 /////
+        // Increase the long position loan
+
+        uint longLoanTake = ORACLE(longLoanTarget - longLoanValue);
+        openOrIncreasePositionSushiswap(
+            longPositionId, 
+            token0,
+            token1,
+            0, // amountToken0
+            0, // amountToken1 will be 0
+            0, // 0 LP Supplied
+            longLoanTake,
+            0, // 0 Borrrow of token1
+            0 // Place in the Sushiswap PID
         );
         
+        ///// ACTION 5 /////
+        // Increase the short position loan
+        uint shortLoanTake = ORACLE(shortLoanTarget - shortLoanValue);
+        openOrIncreasePositionSushiswap(
+            longPositionId, 
+            token0,
+            token1,
+            0, // amountToken0
+            0, // amountToken1 will be 0
+            0, // 0 LP Supplied
+            0,
+            shortLoanTake, // Token 1
+            0 // Place in the Sushiswap PID
+        );
+
 
 
         // Rebalancing: Say Eth price goes up
