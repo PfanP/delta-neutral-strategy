@@ -35,6 +35,8 @@ contract StrategyFixture is ExtendedTest {
     address token1 = 0x0000000000000000000000000000000000000000;
     address swapper = 0x0000000000000000000000000000000000000000;
     uint farmLeverage = 3;
+    address concaveOracle = 0x0000000000000000000000000000000000000000;
+    address lpToken = 0x0000000000000000000000000000000000000000;
 
     address public gov = 0xFEB4acf3df3cDEA7399794D0869ef76A6EfAff52;
     address public user = address(1);
@@ -163,7 +165,9 @@ contract StrategyFixture is ExtendedTest {
             swapper,
             token0,
             token1,
-            farmLeverage
+            farmLeverage,
+            concaveOracle,
+            lpToken
         );
 
         return address(_strategy);
