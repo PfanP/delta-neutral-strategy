@@ -56,7 +56,7 @@
     function nextPositionId() external returns (uint256);
     function onERC1155BatchReceived(address, address, uint256[] memory, uint256[] memory, bytes calldata) external returns (bytes4);
     function onERC1155Received(address, address, uint256, uint256, bytes calldata) external returns (bytes4);
-    function oracle() external returns (address);
+    function oracle() external view returns (address);
     function pendingGovernor() external returns (address);
     function positions(uint256) external returns (address, address, uint256, uint256, uint256);
     function putCollateral(address, uint256, uint256) external;

@@ -5,7 +5,7 @@ pragma abicoder v2;
 import {IERC20} from "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 import {SafeERC20} from "@openzeppelin/contracts/token/ERC20/utils/SafeERC20.sol";
 import {ExtendedTest} from "./ExtendedTest.sol";
-import {Vm} from "forge-std/Vm.sol";
+import {Vm} from "../../../lib/forge-std/src/Vm.sol";
 import {IVault} from "../../interfaces/IVault.sol";
 import "../../../utils/VyperDeployer.sol";
 
@@ -33,6 +33,7 @@ contract StrategyFixture is ExtendedTest {
     address sushiSwapSpell = 0x0000000000000000000000000000000000000000;
     address token0 = 0x0000000000000000000000000000000000000000;
     address token1 = 0x0000000000000000000000000000000000000000;
+    address swapper = 0x0000000000000000000000000000000000000000;
     uint farmLeverage = 3;
     address concaveOracle = 0x0000000000000000000000000000000000000000;
     address lpToken = 0x0000000000000000000000000000000000000000;
@@ -161,6 +162,7 @@ contract StrategyFixture is ExtendedTest {
             _vault,
             homoraBank,
             sushiSwapSpell,
+            swapper,
             token0,
             token1,
             farmLeverage,

@@ -4,6 +4,7 @@ pragma experimental ABIEncoderV2;
 
 import "../../interfaces/IHomoraBank.sol";
 import "@openzeppelin/contracts/token/ERC20/IERC20.sol";
+import "../../interfaces/IBaseOracle.sol";
 import "../../interfaces/IWMasterChef.sol";
 import "../../interfaces/IHomoraSushiSpell.sol";
 import {DopeAssMathLib} from "../../../lib/dn-chad-math/DopeAssMathLib.sol";
@@ -274,4 +275,16 @@ abstract contract HomoraFarmHandler {
         return IHomoraBank(homoraBank).getBorrowETHValue(positionId);
     }
 
+    /// @dev Return the sushi token from the master chef
+    function getSushi() public view returns (IERC20) {
+        IWMasterChef chef = IHomoraSushiSpell(sushiSwapSpell).wmasterchef();
+        return chef.sushi();
+    }
+
+    /// @dev Return the value of the given input as ETH per unit, multiplied by 2**112.
+    /// @param token The ERC-20 token to check the value.
+    function getETHPx(address token) public view returns (uint) {
+        IBaseOracle oracle = IBaseOracle(IHomoraBank(homoraBank).oracle());
+        return oracle.getETHPx(token);
+    }
 }
