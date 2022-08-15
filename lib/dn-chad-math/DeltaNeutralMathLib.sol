@@ -17,14 +17,13 @@ library DeltaNeutralMathLib {
     using DopeAssMathLib for uint256;
 
     function getDesiredAdjustment(
-        DeltaNeutralMetadata memory data,
-        uint256 debtPayment
+        DeltaNeutralMetadata memory data
     ) internal pure returns (uint256 desiredAdjustment) {
         
         //           / lEv + sEv + hV \
         //    daf = ( ---------------- ) 
         //           \     1 + lV     /
-        return (data.longEquityValue + data.shortEquityValue + data.harvestValue - debtPayment).divWad(1e18 + data.leverageValue);
+        return (data.longEquityValue + data.shortEquityValue + data.harvestValue).divWad(1e18 + data.leverageValue);
     }
     
     /////////////////////////////////////////
@@ -114,48 +113,44 @@ library DeltaNeutralMathLib {
     function longEquityRebalanceTarget(
         DeltaNeutralMetadata memory data,
         uint256 desiredAdjustment
-    ) internal pure returns (uint256 longEquityTarget, bool addToPosition) {
-        // Boolean - True: Add to the position | False: Take from the position
+    ) internal pure returns (uint256 longEquityTarget) {
         return data.longEquityValue < desiredAdjustment ?
-            (desiredAdjustment - data.longEquityValue, true): 
-        (data.longEquityValue - desiredAdjustment, false);
+            (desiredAdjustment - data.longEquityValue): 
+        (data.longEquityValue - desiredAdjustment);
     }
 
     function shortEquityRebalanceTarget(
         DeltaNeutralMetadata memory data,
         uint256 desiredAdjustment
-    ) internal pure returns (uint256 shortEquityTarget, bool addToPosition) {
-        // Boolean - True: Add to the position | False: Take from the position
+    ) internal pure returns (uint256 shortEquityTarget) {
         uint256 adjustmentTimesLeverage = desiredAdjustment.mulWad(data.leverageValue);
 
         return data.shortEquityValue < adjustmentTimesLeverage ?
-            (adjustmentTimesLeverage - data.shortEquityValue, true): 
-        (data.shortEquityValue - adjustmentTimesLeverage, false);
+            (adjustmentTimesLeverage - data.shortEquityValue): 
+        (data.shortEquityValue - adjustmentTimesLeverage);
     }
 
     function shortLoanRebalanceTarget(
         DeltaNeutralMetadata memory data,
         uint256 desiredAdjustment
-    ) internal pure returns (uint256 shortLoanTarget, bool addToPosition) {
-        // Boolean - True: Add to the position | False: Take from the position
+    ) internal pure returns (uint256 shortLoanTarget) {
         uint256 leverageValueSquared = data.leverageValue.mulWad(data.leverageValue);
         uint256 adjustmentTimesLeverageSquared = desiredAdjustment.mulWad(leverageValueSquared);
 
         return data.shortLoanValue < adjustmentTimesLeverageSquared ?
-            (adjustmentTimesLeverageSquared - data.shortLoanValue, true): 
-            (data.shortLoanValue - adjustmentTimesLeverageSquared, false);
+            (adjustmentTimesLeverageSquared - data.shortLoanValue): 
+            (data.shortLoanValue - adjustmentTimesLeverageSquared);
     }
 
     function longLoanRebalanceTarget(
         DeltaNeutralMetadata memory data,
         uint256 desiredAdjustment
-    ) internal pure returns (uint256 longLoanTarget, bool addToPosition) {
-        // Boolean - True: Add to the position | False: Take from the position
+    ) internal pure returns (uint256 longLoanTarget) {
         uint256 adjustmentTimesLeverage = desiredAdjustment.mulWad(data.leverageValue);
 
         return data.longLoanValue < adjustmentTimesLeverage ?
-            (adjustmentTimesLeverage - data.longLoanValue, true): 
-        (data.longLoanValue - adjustmentTimesLeverage, false);
+            (adjustmentTimesLeverage - data.longLoanValue): 
+        (data.longLoanValue - adjustmentTimesLeverage);
     }
 
 }

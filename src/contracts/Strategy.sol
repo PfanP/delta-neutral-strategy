@@ -16,6 +16,7 @@ import {HomoraFarmHandler} from "../contracts/homora/HomoraFarmHandler.sol";
 import {BaseStrategy, StrategyParams} from "./yearn/BaseStrategy.sol";
 import "../interfaces/IHomoraFarmHandler.sol";
 import "../interfaces/oracle/IConcaveOracle.sol";
+import "../interfaces/IERC1155.sol";
 
 import {Address} from "@openzeppelin/contracts/utils/Address.sol";
 import {IERC20} from "@openzeppelin/contracts/token/ERC20/IERC20.sol";
@@ -177,12 +178,11 @@ contract Strategy is BaseStrategy, HomoraFarmHandler {
         );
         
         // All values here valuated in ETH
-        uint256 desiredAdjustment = data.getDesiredAdjustment(_debtOutstanding); 
-
-        (uint256 longEquityTarget, bool addToLongEquity) = data.longEquityRebalanceTarget(desiredAdjustment);
-        (uint256 longLoanTarget, bool addToLongLoan) = data.longLoanRebalanceTarget(desiredAdjustment);
-        (uint256 shortEquityTarget, bool addToShortEquity) = data.shortEquityRebalanceTarget(desiredAdjustment);
-        (uint256 shortLoanTarget, bool addToShortLoan) = data.shortLoanRebalanceTarget(desiredAdjustment);
+        uint256 desiredAdjustment = data.getDesiredAdjustment(); 
+        uint256 longEquityTarget = data.longEquityRebalanceTarget(desiredAdjustment);
+        uint256 longLoanTarget = data.longLoanRebalanceTarget(desiredAdjustment);
+        uint256 shortEquityTarget = data.shortEquityRebalanceTarget(desiredAdjustment);
+        uint256 shortLoanTarget = data.shortLoanRebalanceTarget(desiredAdjustment);
         
         performRebalance(
             longEquityTarget,
@@ -264,7 +264,9 @@ contract Strategy is BaseStrategy, HomoraFarmHandler {
         if (shortEquityTarget < shortEquityValue) {
             uint shortLpRemove = shortLpTokenAmount * ((shortEquityValue - shortEquityTarget) / shortEquityValue); 
             
-            uint extraLPBal = self.balanceOf(lpToken);
+            // TODO: Redefine the lpToken var - ID needs figuring
+            uint extraLPBal = IERC1155(lpToken).balanceOf(address(this), 0);  
+
             // Calculate the loan payback in LP units
             uint shortLpLoanPayback = 0;
             if (shortLoanTarget < shortLoanValue) {
@@ -289,7 +291,10 @@ contract Strategy is BaseStrategy, HomoraFarmHandler {
         ///// ACTION 3 /////
         // Do another payback on the longLoanPosition if needed
         // NOTE: Maybe need to add a statement here to prevent overpaying the loan
-        if (self.balanceOf(lpToken) > 0 && longLoanTarget < getBorrowETHValue(longPositionId)) {
+        
+        // TODO: Redefine the lpToken var - ID needs figuring
+        uint action3LpTokenBal = IERC1155(lpToken).balanceOf(address(this), 0);
+        if (action3LpTokenBal > 0 && longLoanTarget < getBorrowETHValue(longPositionId)) {
                 reducePositionSushiswap(
                     longPositionId, 
                     token0, 
@@ -298,19 +303,20 @@ contract Strategy is BaseStrategy, HomoraFarmHandler {
                     0, //amtWithdraw = 0 because we want to keep the LP tokens
                     0, // Repay token0
                     0, // Repay token1
-                    remainderLPBalance // Repay in LP amounts
+                    action3LpTokenBal // Repay in LP amounts
                 ); 
         }
 
         ///// ACTION 4 /////
         // Increase the long position loan if needed
-        longLoanVaue = getBorrowETHValue(longPositionId);
+        longLoanValue = getBorrowETHValue(longPositionId);
 
         if (longLoanValue < longLoanTarget) {
-            uint longLoanTake = IConcaveOracle(concaveOracle).getPrice(
+            (uint longLoanTake, ) = IConcaveOracle(concaveOracle).getPrice(
                 ethTokenAddress,
                 token0
-            ) * (longLoanTarget - longLoanValue);
+            );
+            longLoanTake = longLoanTake * (longLoanTarget - longLoanValue);
             openOrIncreasePositionSushiswap(
                 longPositionId, 
                 token0,
@@ -326,13 +332,15 @@ contract Strategy is BaseStrategy, HomoraFarmHandler {
 
         ///// ACTION 5 /////
         // Increase the short position loan if needed
-        shortLoanVaue = getBorrowETHValue(shortPositionId);
+        shortLoanValue = getBorrowETHValue(shortPositionId);
 
         if (shortLoanValue < shortLoanTarget) {
-            uint shortLoanTake = IConcaveOracle(concaveOracle).getPrice(
+            (uint shortLoanTake, ) = IConcaveOracle(concaveOracle).getPrice(
                 ethTokenAddress,
                 token1
-            ) * (shortLoanTarget - shortLoanValue);
+            );
+            shortLoanTake = shortLoanTake * (shortLoanTarget - shortLoanValue);
+
             openOrIncreasePositionSushiswap(
                 shortPositionId, 
                 token0,
