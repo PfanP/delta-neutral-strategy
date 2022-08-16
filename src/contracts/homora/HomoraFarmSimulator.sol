@@ -52,8 +52,15 @@ abstract contract HomoraFarmSimulator {
     }
 
     constructor(
-        address _homoraBank,
-        address _relevantHomoraSpell,
+        address _homoraBank, // Constructor inputs not really used except to parrot the original Farm Handler
+        address _relevantHomoraSpell
+    ) {
+        homoraBank = _homoraBank;
+        relevantHomoraSpell = _relevantHomoraSpell;
+        sushiSwapSpell = _relevantHomoraSpell;
+    }
+
+    function initialize(
         uint _mockHarvestAmount,
         uint _longPositionETH,
         uint _longPositionLoanETH,
@@ -61,11 +68,7 @@ abstract contract HomoraFarmSimulator {
         uint _shortPositionLoanETH,
         uint _longLPAmount,
         uint _shortLPAmount
-    ) {
-        homoraBank = _homoraBank;
-        relevantHomoraSpell = _relevantHomoraSpell;
-        sushiSwapSpell = _relevantHomoraSpell;
-
+    ) external {
         mockHarvestAmount = _mockHarvestAmount;
         longPositionETH = _longPositionETH;
         longPositionLoanETH = _longPositionLoanETH;

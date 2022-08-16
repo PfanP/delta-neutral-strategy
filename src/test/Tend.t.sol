@@ -7,15 +7,22 @@ import "../../lib/forge-std/src/console.sol";
 import {Strategy} from "../contracts/Strategy.sol";
 import {ExtendedTest} from "./utils/ExtendedTest.sol";
 import {IVault} from "../interfaces/IVault.sol";
+import "../../utils/VyperDeployer.sol";
+import "../Token.sol";
+import {UniswapV2Swapper} from "../contracts/swapper/UniswapV2Swapper.sol";
+
 
 contract TendTest is ExtendedTest {
-    address vaultToken = 0x0000000000000000000000000000000000000000;
-    address gov = 0x0000000000000000000000000000000000000000;
-    address rewards = 0x0000000000000000000000000000000000000000;
+    Strategy DNStrategy;
+    Token vaultToken;
+    UniswapV2Swapper swapper;
+
+    address gov = 0x0000000000000000000000000000000000000010;
+    address rewards = 0x0000000000000000000000000000000000000100;
 
     address hBank = 0x0000000000000000000000000000000000000000;
     address sushiSwapSpell = 0x0000000000000000000000000000000000000000;
-    address swapper = 0x0000000000000000000000000000000000000000;
+    address router = 0x0000000000000000000000000000000000000000;
 
     address token0 = 0x0000000000000000000000000000000000000001;
     address token1 = 0x0000000000000000000000000000000000000002;
@@ -23,19 +30,25 @@ contract TendTest is ExtendedTest {
     address concaveOracle = 0x0000000000000000000000000000000000000000;
     address lpToken = 0x0000000000000000000000000000000000000000;
 
+    address keeper = 0x0000000000000000000000000000000000000003;
+
     function setUp() public {
+        vaultToken = new Token();
+        swapper = new UniswapV2Swapper(router);
+
         string memory vaultArtifact = "artifacts/Vault.json";
-        address _vaultAddress = deployCode(vaultArtifact);
-        //VyperDeployer vyperDeployer = new VyperDeployer();
+        //address _vaultAddress = deployCode(vaultArtifact);
+        VyperDeployer vyperDeployer = new VyperDeployer();
         IVault vault = IVault(
-            //vyperDeployer.deployContract("Vault", abi.encode())
-            _vaultAddress
+            vyperDeployer.deployContract("Vault", abi.encode())
+            //_vaultAddress
         );
 
+        emit log_uint(1);
         string memory _name = 'CVault';
         string memory _symbol = 'vCNV';
         vault.initialize(
-            vaultToken,
+            address(vaultToken),
             gov,
             rewards,
             _name,
@@ -44,11 +57,12 @@ contract TendTest is ExtendedTest {
             //_management
         );
 
-        Strategy strategy = new Strategy(
+        emit log_uint(2);
+        DNStrategy = new Strategy(
             address(vault),
             hBank,
             sushiSwapSpell,
-            swapper,
+            address(swapper),
             token0,
             token1,
             farmLeverage,
@@ -56,9 +70,18 @@ contract TendTest is ExtendedTest {
             lpToken
         );
 
+        emit log_uint(3);
+        DNStrategy.setKeeper(keeper);
+    }
+
+    function test_tend() public {
+
+        //DNStrategy.tend(true);
 
 
     }
+
+
 
 /*
     /// Test Operations
