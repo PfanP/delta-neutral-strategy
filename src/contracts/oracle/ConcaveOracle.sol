@@ -1,7 +1,6 @@
 pragma solidity ^0.8.13;
 
 import "../../interfaces/oracle/IBaseOracle.sol";
-import "./UsingBaseOracle.sol";
 import "./Governable.sol";
 import "@openzeppelin/contracts/utils/math/SafeMath.sol";
 import "../../../lib/dn-chad-math/DopeAssMathLib.sol";
