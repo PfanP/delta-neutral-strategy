@@ -8,11 +8,12 @@ import {Strategy} from "../contracts/Strategy.sol";
 import {ExtendedTest} from "./utils/ExtendedTest.sol";
 import {IVault} from "../interfaces/IVault.sol";
 import "../../utils/VyperDeployer.sol";
+import {VyperTest} from "../../utils/VyperTest.sol";
 import "../Token.sol";
 import {UniswapV2Swapper} from "../contracts/swapper/UniswapV2Swapper.sol";
 
 
-contract TendTest is ExtendedTest {
+contract TendTest is ExtendedTest, VyperTest {
     Strategy DNStrategy;
     Token vaultToken;
     UniswapV2Swapper swapper;
@@ -24,8 +25,8 @@ contract TendTest is ExtendedTest {
     address sushiSwapSpell = 0x0000000000000000000000000000000000000000;
     address router = 0x0000000000000000000000000000000000000000;
 
-    address token0 = 0x0000000000000000000000000000000000000001;
-    address token1 = 0x0000000000000000000000000000000000000002;
+    address token0 = 0x6B175474E89094C44Da98b954EedeAC495271d0F; // DAI on ETH
+    address token1 = 0xC02aaA39b223FE8D0A0e5C4F27eAD9083C756Cc2; // WETH on ETH
     uint farmLeverage = 3;
     address concaveOracle = 0x0000000000000000000000000000000000000000;
     address lpToken = 0x0000000000000000000000000000000000000000;
@@ -36,15 +37,15 @@ contract TendTest is ExtendedTest {
         vaultToken = new Token();
         swapper = new UniswapV2Swapper(router);
 
-        string memory vaultArtifact = "artifacts/Vault.json";
+        //string memory vaultArtifact = "artifacts/Vault.json";
         //address _vaultAddress = deployCode(vaultArtifact);
-        VyperDeployer vyperDeployer = new VyperDeployer();
+        //VyperDeployer vyperDeployer = new VyperDeployer();
         IVault vault = IVault(
-            vyperDeployer.deployContract("Vault", abi.encode())
+            //vyperDeployer.deployContract("Vault", abi.encode())
             //_vaultAddress
+            deployContract("vyper_contracts/Vault.vy")
         );
 
-        emit log_uint(1);
         string memory _name = 'CVault';
         string memory _symbol = 'vCNV';
         vault.initialize(
@@ -57,7 +58,7 @@ contract TendTest is ExtendedTest {
             //_management
         );
 
-        emit log_uint(2);
+        emit log_address(address(swapper));
         DNStrategy = new Strategy(
             address(vault),
             hBank,

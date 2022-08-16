@@ -1,4 +1,3 @@
-/*
 pragma solidity ^0.8.13;
 
 import "../../interfaces/oracle/IBaseOracle.sol";
@@ -173,4 +172,3 @@ contract ConcaveOracle is IBaseOracle, Governable {
         emit AddedPrimarySource(token, maxPriceDeviation, oracles);
     }
 }
-*/ 

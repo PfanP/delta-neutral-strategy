@@ -8,6 +8,8 @@ import "../../interfaces/IBaseOracle.sol";
 import "../../interfaces/IWMasterChef.sol";
 import "../../interfaces/IHomoraSushiSpell.sol";
 import {DopeAssMathLib} from "../../../lib/dn-chad-math/DopeAssMathLib.sol";
+import {Token} from "../../Token.sol";
+
 
 /// @title The interface for Alpha Homora Leveraged Yield Farms
 /// @notice Operates positons on Homora farms
@@ -18,6 +20,7 @@ abstract contract HomoraFarmSimulator {
     address public immutable homoraBank;
     address public immutable relevantHomoraSpell;
     address public immutable sushiSwapSpell;
+    address farmToken = 0x0000000000000000000000000000000000100000;
 
     uint mockHarvestAmount;
     uint longPositionETH;
@@ -246,8 +249,7 @@ abstract contract HomoraFarmSimulator {
 
     /// @dev Return the sushi token from the master chef
     function getSushi() public view returns (IERC20) {
-        IWMasterChef chef = IHomoraSushiSpell(sushiSwapSpell).wmasterchef();
-        return chef.sushi();
+        return IERC20(farmToken);
     }
 
     /// @dev Return the value of the given input as ETH per unit, multiplied by 2**112.
