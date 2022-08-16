@@ -90,11 +90,7 @@ abstract contract HomoraFarmSimulator {
         uint256 borrowToken1,
         uint256 pid // pool id
     ) public returns (
-        supplyToken0,
-        supplyToken1,
-        supplyLp,
-        borrowToken0,
-        borrowToken1
+        positionID
     ) {
         
     }
@@ -109,11 +105,7 @@ abstract contract HomoraFarmSimulator {
         uint256 repayAmtToken1,
         uint256 amountLPRepay
     ) public returns (
-        amtLPTake,
-        amtLPWithdraw,
-        repayAmtToken0,
-        repayAmtToken1,
-        amountLPRepay
+        positionID
     ) {
 
     }
@@ -218,11 +210,11 @@ abstract contract HomoraFarmSimulator {
         returns (uint256)
     {
         if (positionId == longPositionId) {
-            return (0,0,0,longPositionETH);
+            return longPositionETH;
         } else if (positionId == shortPositionId) {
-            return (0,0,0,shortPositionETH);
+            return shortPositionETH;
         } else {
-            return (0,0,0,0);
+            return 0;
         }
     }
 
@@ -234,11 +226,11 @@ abstract contract HomoraFarmSimulator {
         returns (uint256)
     {
         if (positionId == longPositionId) {
-            return (0,0,0,longPositionLoanETH);
+            return longPositionLoanETH;
         } else if (positionId == shortPositionId) {
-            return (0,0,0,shortPositionLoanETH);
+            return shortPositionLoanETH;
         } else {
-            return (0,0,0,0);
+            return 0;
         }
     }
 
