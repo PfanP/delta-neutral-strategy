@@ -8,6 +8,8 @@ import "../../interfaces/IBaseOracle.sol";
 import "../../interfaces/IWMasterChef.sol";
 import "../../interfaces/IHomoraSushiSpell.sol";
 import {DopeAssMathLib} from "../../../lib/dn-chad-math/DopeAssMathLib.sol";
+import {Token} from "../../Token.sol";
+
 
 /// @title The interface for Alpha Homora Leveraged Yield Farms
 /// @notice Operates positons on Homora farms
@@ -18,6 +20,7 @@ abstract contract HomoraFarmSimulator {
     address public immutable homoraBank;
     address public immutable relevantHomoraSpell;
     address public immutable sushiSwapSpell;
+    address farmToken = 0x0000000000000000000000000000000000100000;
 
     uint mockHarvestAmount;
     uint longPositionETH;
@@ -28,7 +31,7 @@ abstract contract HomoraFarmSimulator {
     uint shortLPAmount;
 
     uint longPositionId = 0;
-    uint shortPostionId = 1;
+    uint shortPositionId = 1;
 
     struct Amounts {
         uint256 amtAUser; // Supplied tokenA amount
@@ -52,8 +55,15 @@ abstract contract HomoraFarmSimulator {
     }
 
     constructor(
-        address _homoraBank,
-        address _relevantHomoraSpell,
+        address _homoraBank, // Constructor inputs not really used except to parrot the original Farm Handler
+        address _relevantHomoraSpell
+    ) {
+        homoraBank = _homoraBank;
+        relevantHomoraSpell = _relevantHomoraSpell;
+        sushiSwapSpell = _relevantHomoraSpell;
+    }
+
+    function initialize(
         uint _mockHarvestAmount,
         uint _longPositionETH,
         uint _longPositionLoanETH,
@@ -61,11 +71,7 @@ abstract contract HomoraFarmSimulator {
         uint _shortPositionLoanETH,
         uint _longLPAmount,
         uint _shortLPAmount
-    ) {
-        homoraBank = _homoraBank;
-        relevantHomoraSpell = _relevantHomoraSpell;
-        sushiSwapSpell = _relevantHomoraSpell;
-
+    ) external {
         mockHarvestAmount = _mockHarvestAmount;
         longPositionETH = _longPositionETH;
         longPositionLoanETH = _longPositionLoanETH;
@@ -89,14 +95,11 @@ abstract contract HomoraFarmSimulator {
         uint256 borrowToken0,
         uint256 borrowToken1,
         uint256 pid // pool id
-    ) public returns (
-        positionID
-    ) {
-        
+    ) public returns (uint) {
+        return positionID;
     }
 
-    function reducePositionSushiswap(
-        uint256 positionID,
+    function reducePositionSushiswap( 
         address token0,
         address token1,
         uint256 amtLPTake,
@@ -104,15 +107,13 @@ abstract contract HomoraFarmSimulator {
         uint256 repayAmtToken0,
         uint256 repayAmtToken1,
         uint256 amountLPRepay
-    ) public returns (
-        positionID
-    ) {
+    ) public {
 
     }
 
     // Sushiswap harvest rewards
     function harvestSushiswap(uint256 positionID) public {
-        return mockHarvestAmount;
+        // Transfer some mock tokens here
     }
 
     // Sushiswap get pending rewards
@@ -137,11 +138,23 @@ abstract contract HomoraFarmSimulator {
         )
     {   
         if (positionId == longPositionId) {
-            return (0,0,0,longLPAmount);
+            return (
+                0x0000000000000000000000000000000000000000,
+                0x0000000000000000000000000000000000000000,
+                0,
+                longLPAmount);
         } else if (positionId == shortPositionId) {
-            return (0,0,0,shortLPAmount);
+            return (
+                0x0000000000000000000000000000000000000000,
+                0x0000000000000000000000000000000000000000,
+                0,
+                shortLPAmount);
         } else {
-            return (0,0,0,0);
+            return (
+                0x0000000000000000000000000000000000000000,
+                0x0000000000000000000000000000000000000000,
+                0,
+                0);        
         }
     }
 
@@ -236,8 +249,7 @@ abstract contract HomoraFarmSimulator {
 
     /// @dev Return the sushi token from the master chef
     function getSushi() public view returns (IERC20) {
-        IWMasterChef chef = IHomoraSushiSpell(sushiSwapSpell).wmasterchef();
-        return chef.sushi();
+        return IERC20(farmToken);
     }
 
     /// @dev Return the value of the given input as ETH per unit, multiplied by 2**112.

@@ -672,7 +672,7 @@ abstract contract BaseStrategy {
      *
      *  This may only be called by governance, the strategist, or the keeper.
      */
-    function tend(bool _overrideMode) internal virtual onlyKeepers {
+    function tend(bool _overrideMode) external virtual onlyKeepers {
 
     }
 

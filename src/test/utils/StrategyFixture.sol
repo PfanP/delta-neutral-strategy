@@ -147,11 +147,9 @@ contract StrategyFixture is ExtendedTest {
             //_guardian,
             //_management
         );
-        emit log_uint(101);
 
         vm.prank(_gov);
         _vault.setDepositLimit(type(uint256).max);
-        emit log_uint(102);
 
         return address(_vault);
     }
@@ -185,7 +183,6 @@ contract StrategyFixture is ExtendedTest {
         address _keeper,
         address _strategist
     ) public returns (address _vaultAddr, address _strategyAddr) {
-        emit log_uint(11);
         _vaultAddr = deployVault(
             _token,
             _gov,
@@ -195,7 +192,6 @@ contract StrategyFixture is ExtendedTest {
             _guardian,
             _management
         );
-        emit log_uint(12);
 
         IVault _vault = IVault(_vaultAddr);
 
@@ -205,7 +201,6 @@ contract StrategyFixture is ExtendedTest {
 
         vm.prank(_strategist);
         _strategy.setKeeper(_keeper);
-        emit log_uint(13);
 
         vm.prank(_gov);
         _vault.addStrategy(
@@ -215,7 +210,6 @@ contract StrategyFixture is ExtendedTest {
             type(uint256).max, 
             1_000
         );
-        emit log_uint(14);
 
         return (address(_vault), address(_strategy));
     }
