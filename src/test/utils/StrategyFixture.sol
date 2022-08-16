@@ -4,6 +4,7 @@ pragma abicoder v2;
 
 import {IERC20} from "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 import {SafeERC20} from "@openzeppelin/contracts/token/ERC20/utils/SafeERC20.sol";
+import "forge-std/console.sol";
 import {ExtendedTest} from "./ExtendedTest.sol";
 import {Vm} from "../../../lib/forge-std/src/Vm.sol";
 import {IVault} from "../../interfaces/IVault.sol";
@@ -109,6 +110,7 @@ contract StrategyFixture is ExtendedTest {
         // do here additional setup
     }
 
+
     // Deploys a vault
     function deployVault(
         address _token,
@@ -120,39 +122,26 @@ contract StrategyFixture is ExtendedTest {
         address _management
     ) public returns (address) {
         address _vaultAddress = deployCode(vaultArtifact);
-        //VyperDeployer vyperDeployer = new VyperDeployer();
-        IVault _vault = IVault(
-            //vyperDeployer.deployContract("Vault", abi.encode())
-            _vaultAddress
-        );
-        emit log_uint(100);
 
-        _name = 'cVault';
-        _symbol = 'cv';
-        emit log_address(_token);
-        emit log_address(_gov);
-        emit log_address(_rewards);
-        emit log_string(_name);
-        emit log_string(_symbol);
+        IVault _vault = IVault(_vaultAddress);
 
-        //vm.prank(_gov);
+        vm.prank(_gov);
         _vault.initialize(
             _token,
             _gov,
             _rewards,
             _name,
-            _symbol//,
-            //_guardian,
-            //_management
+            _symbol,
+            _guardian,
+            _management
         );
-        emit log_uint(101);
 
         vm.prank(_gov);
         _vault.setDepositLimit(type(uint256).max);
-        emit log_uint(102);
 
         return address(_vault);
     }
+
 
     // Deploys a strategy
     function deployStrategy(address _vault) public returns (address) {

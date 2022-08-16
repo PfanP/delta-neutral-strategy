@@ -275,14 +275,7 @@ PERMIT_TYPE_HASH: constant(bytes32) = keccak256("Permit(address owner,address sp
 
 @external
 def initialize(
-    token: address,
-    governance: address,
-    rewards: address,
-    nameOverride: String[64],
-    symbolOverride: String[32],
-    guardian: address = msg.sender,
-    management: address =  msg.sender,
-    healthCheck: address = ZERO_ADDRESS
+
 ):
     """
     @notice
@@ -309,48 +302,48 @@ def initialize(
     @param symbolOverride Specify a custom Vault symbol name. Leave empty for default choice.
     @param guardian The address authorized for guardian interactions. Defaults to caller.
     """
-    assert self.activation == 0  # dev: no devops199
-    self.token = ERC20(token)
-    if nameOverride == "":
-        self.name = concat(DetailedERC20(token).symbol(), " yVault")
-    else:
-        self.name = nameOverride
-    if symbolOverride == "":
-        self.symbol = concat("yv", DetailedERC20(token).symbol())
-    else:
-        self.symbol = symbolOverride
-    decimals: uint256 = DetailedERC20(token).decimals()
-    self.decimals = decimals
-    assert decimals < 256 # dev: see VVE-2020-0001
+    # assert self.activation == 0  # dev: no devops199
+    # self.token = ERC20(token)
+    # if nameOverride == "":
+    #     self.name = concat(DetailedERC20(token).symbol(), " yVault")
+    # else:
+    #     self.name = nameOverride
+    # if symbolOverride == "":
+    #     self.symbol = concat("yv", DetailedERC20(token).symbol())
+    # else:
+    #     self.symbol = symbolOverride
+    # decimals: uint256 = DetailedERC20(token).decimals()
+    # self.decimals = decimals
+    # assert decimals < 256 # dev: see VVE-2020-0001
 
-    self.governance = governance
-    log UpdateGovernance(governance)
-    self.management = management
-    log UpdateManagement(management)
-    self.rewards = rewards
-    log UpdateRewards(rewards)
-    self.guardian = guardian
-    log UpdateGuardian(guardian)
-    self.performanceFee = 1000  # 10% of yield (per Strategy)
-    log UpdatePerformanceFee(convert(1000, uint256))
-    self.managementFee = 200  # 2% per year
-    log UpdateManagementFee(convert(200, uint256))
-    self.healthCheck = healthCheck
-    log UpdateHealthCheck(healthCheck)
+    # self.governance = governance
+    # log UpdateGovernance(governance)
+    # self.management = management
+    # log UpdateManagement(management)
+    # self.rewards = rewards
+    # log UpdateRewards(rewards)
+    # self.guardian = guardian
+    # log UpdateGuardian(guardian)
+    # self.performanceFee = 1000  # 10% of yield (per Strategy)
+    # log UpdatePerformanceFee(convert(1000, uint256))
+    # self.managementFee = 200  # 2% per year
+    # log UpdateManagementFee(convert(200, uint256))
+    # self.healthCheck = healthCheck
+    # log UpdateHealthCheck(healthCheck)
 
-    self.lastReport = block.timestamp
-    self.activation = block.timestamp
-    self.lockedProfitDegradation = convert(DEGRADATION_COEFFICIENT * 46 / 10 ** 6 , uint256) # 6 hours in blocks
-    # EIP-712
-    self.DOMAIN_SEPARATOR = keccak256(
-        concat(
-            DOMAIN_TYPE_HASH,
-            keccak256(convert("Yearn Vault", Bytes[11])),
-            keccak256(convert(API_VERSION, Bytes[28])),
-            convert(chain.id, bytes32),
-            convert(self, bytes32)
-        )
-    )
+    # self.lastReport = block.timestamp
+    # self.activation = block.timestamp
+    # self.lockedProfitDegradation = convert(DEGRADATION_COEFFICIENT * 46 / 10 ** 6 , uint256) # 6 hours in blocks
+    # # EIP-712
+    # self.DOMAIN_SEPARATOR = keccak256(
+    #     concat(
+    #         DOMAIN_TYPE_HASH,
+    #         keccak256(convert("Yearn Vault", Bytes[11])),
+    #         keccak256(convert(API_VERSION, Bytes[28])),
+    #         convert(chain.id, bytes32),
+    #         convert(self, bytes32)
+    #     )
+    # )
 
 
 @pure
