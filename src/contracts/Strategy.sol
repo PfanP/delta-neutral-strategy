@@ -168,7 +168,7 @@ contract Strategy is BaseStrategy, HomoraFarmHandler {
         _debtPayment = _debtOutstanding;
     }
 
-    function tend(bool _overrideMode) internal override {
+    function tend(bool _overrideMode) external override onlyKeepers {
         uint256 debtOutstanding = vault.debtOutstanding(); // How much the vault expects the strategy to pay back
         uint256 profit = 0;
         uint256 loss = 0;
@@ -178,11 +178,11 @@ contract Strategy is BaseStrategy, HomoraFarmHandler {
             // Free up as much capital as possible
             uint256 amountFreed = liquidateAllPositions();
             if (amountFreed < debtOutstanding) {
-                loss = debtOutstanding.sub(amountFreed);
+                loss = debtOutstanding - amountFreed;
             } else if (amountFreed > debtOutstanding) {
-                profit = amountFreed.sub(debtOutstanding);
+                profit = amountFreed - debtOutstanding;
             }
-            debtPayment = debtOutstanding.sub(loss);
+            debtPayment = debtOutstanding - loss;
             debtOutstanding = vault.report(profit, loss, debtPayment); // Send tokens to Vault
         } else {
             // The usual flow
@@ -203,6 +203,7 @@ contract Strategy is BaseStrategy, HomoraFarmHandler {
                 // everything else
                 rebalancePosition(0);
             }
+        }
         // In this particular DN tend strategy we need to know beforehand whether we pay
         // the vault or the vault pays us. 
         // If vault pays us, we need the tokens before performing rebalance. 
@@ -229,15 +230,15 @@ contract Strategy is BaseStrategy, HomoraFarmHandler {
         // Still need some health check stuff here
 
         emit Tended(profit, loss, debtPayment, debtOutstanding);
-
     }
-
 
     // Add: Function to change the farm leverage // TODO 
 
     // ********* For Homora - Sushiswap ********** 
     // solhint-disable-next-line no-empty-blocks
-    function rebalancePosition(uint256 _debtOutstanding) internal {
+    function rebalancePosition(
+        uint256 _debtOutstanding
+    ) internal {
         // TODO: Do something to invest excess `want` tokens (from the Vault) into your positions
         // NOTE: Try to adjust positions so that `_debtOutstanding` can be freed up on *next* harvest (not immediately)
         

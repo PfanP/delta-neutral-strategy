@@ -5,16 +5,26 @@ import "../../lib/forge-std/src/console.sol";
 //import {StrategyParams} from "../interfaces/IVault.sol";
 
 import {Strategy} from "../contracts/Strategy.sol";
+import {ExtendedTest} from "./utils/ExtendedTest.sol";
+import {IVault} from "../interfaces/IVault.sol";
 
-contract StrategyOperationsTest {
+contract TendTest is ExtendedTest {
     address vaultToken = 0x0000000000000000000000000000000000000000;
     address gov = 0x0000000000000000000000000000000000000000;
     address rewards = 0x0000000000000000000000000000000000000000;
 
     address hBank = 0x0000000000000000000000000000000000000000;
     address sushiSwapSpell = 0x0000000000000000000000000000000000000000;
+    address swapper = 0x0000000000000000000000000000000000000000;
+
+    address token0 = 0x0000000000000000000000000000000000000001;
+    address token1 = 0x0000000000000000000000000000000000000002;
+    uint farmLeverage = 3;
+    address concaveOracle = 0x0000000000000000000000000000000000000000;
+    address lpToken = 0x0000000000000000000000000000000000000000;
 
     function setUp() public {
+        string memory vaultArtifact = "artifacts/Vault.json";
         address _vaultAddress = deployCode(vaultArtifact);
         //VyperDeployer vyperDeployer = new VyperDeployer();
         IVault vault = IVault(
@@ -24,7 +34,7 @@ contract StrategyOperationsTest {
 
         string memory _name = 'CVault';
         string memory _symbol = 'vCNV';
-        _vault.initialize(
+        vault.initialize(
             vaultToken,
             gov,
             rewards,
@@ -34,7 +44,7 @@ contract StrategyOperationsTest {
             //_management
         );
 
-        Strategy _strategy = new Strategy(
+        Strategy strategy = new Strategy(
             address(vault),
             hBank,
             sushiSwapSpell,
@@ -48,11 +58,9 @@ contract StrategyOperationsTest {
 
 
 
-
-
     }
 
-
+/*
     /// Test Operations
     function testStrategyOperation(uint256 _amount) public {
         vm.assume(_amount > minFuzzAmt && _amount < maxFuzzAmt);
@@ -131,6 +139,5 @@ contract StrategyOperationsTest {
         strategy.harvestTrigger(0);
         strategy.tendTrigger(0);
     }
-
-
+*/ 
 }

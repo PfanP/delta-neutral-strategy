@@ -28,7 +28,7 @@ abstract contract HomoraFarmSimulator {
     uint shortLPAmount;
 
     uint longPositionId = 0;
-    uint shortPostionId = 1;
+    uint shortPositionId = 1;
 
     struct Amounts {
         uint256 amtAUser; // Supplied tokenA amount
@@ -89,14 +89,11 @@ abstract contract HomoraFarmSimulator {
         uint256 borrowToken0,
         uint256 borrowToken1,
         uint256 pid // pool id
-    ) public returns (
-        positionID
-    ) {
-        
+    ) public returns (uint) {
+        return positionID;
     }
 
-    function reducePositionSushiswap(
-        uint256 positionID,
+    function reducePositionSushiswap( 
         address token0,
         address token1,
         uint256 amtLPTake,
@@ -104,15 +101,13 @@ abstract contract HomoraFarmSimulator {
         uint256 repayAmtToken0,
         uint256 repayAmtToken1,
         uint256 amountLPRepay
-    ) public returns (
-        positionID
-    ) {
+    ) public {
 
     }
 
     // Sushiswap harvest rewards
     function harvestSushiswap(uint256 positionID) public {
-        return mockHarvestAmount;
+        // Transfer some mock tokens here
     }
 
     // Sushiswap get pending rewards
@@ -137,11 +132,23 @@ abstract contract HomoraFarmSimulator {
         )
     {   
         if (positionId == longPositionId) {
-            return (0,0,0,longLPAmount);
+            return (
+                0x0000000000000000000000000000000000000000,
+                0x0000000000000000000000000000000000000000,
+                0,
+                longLPAmount);
         } else if (positionId == shortPositionId) {
-            return (0,0,0,shortLPAmount);
+            return (
+                0x0000000000000000000000000000000000000000,
+                0x0000000000000000000000000000000000000000,
+                0,
+                shortLPAmount);
         } else {
-            return (0,0,0,0);
+            return (
+                0x0000000000000000000000000000000000000000,
+                0x0000000000000000000000000000000000000000,
+                0,
+                0);        
         }
     }
 

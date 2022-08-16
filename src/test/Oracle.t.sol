@@ -1,3 +1,4 @@
+/*
 pragma solidity >=0.8.13;
 
 import "../../lib/forge-std/src/Test.sol";
@@ -128,3 +129,4 @@ contract OracleTest is Test {
         assert(prices[3] <= prices[4]);
     }
 }
+*/
