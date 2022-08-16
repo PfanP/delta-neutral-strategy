@@ -158,8 +158,6 @@ interface StrategyAPI {
 
     event Harvested(uint256 profit, uint256 loss, uint256 debtPayment, uint256 debtOutstanding);
     
-    event Tended(uint256 profit, uint256 loss, uint256 debtPayment, uint256 debtOutstanding);
-
 }
 
 interface HealthCheck {
@@ -247,8 +245,6 @@ abstract contract BaseStrategy {
 
     // So indexers can keep track of this
     event Harvested(uint256 profit, uint256 loss, uint256 debtPayment, uint256 debtOutstanding);
-
-    event Tended(uint256 profit, uint256 loss, uint256 debtPayment, uint256 debtOutstanding);
     
     event UpdatedStrategist(address newStrategist);
 
@@ -615,8 +611,6 @@ abstract contract BaseStrategy {
      */
     function adjustPosition(uint256 _debtOutstanding) internal virtual;
 
-    function addToPosition(uint256 _debtOutstanding) internal virtual;
-
     /**
      * Liquidate up to `_amountNeeded` of `want` of this strategy's positions,
      * irregardless of slippage. Any excess will be re-invested with `adjustPosition()`.
@@ -678,70 +672,11 @@ abstract contract BaseStrategy {
      *
      *  This may only be called by governance, the strategist, or the keeper.
      */
-    function tend(bool _overrideMode) external onlyKeepers {
-        uint256 debtOutstanding = vault.debtOutstanding(); // How much the vault expects the strategy to pay back
-        uint256 profit = 0;
-        uint256 loss = 0;
-        uint256 debtPayment = 0; // Amount to pay back to the vault 
+    function tend(bool _overrideMode) internal virtual onlyKeepers {
 
-        if (emergencyExit) {
-            // Free up as much capital as possible
-            uint256 amountFreed = liquidateAllPositions();
-            if (amountFreed < debtOutstanding) {
-                loss = debtOutstanding.sub(amountFreed);
-            } else if (amountFreed > debtOutstanding) {
-                profit = amountFreed.sub(debtOutstanding);
-            }
-            debtPayment = debtOutstanding.sub(loss);
-            debtOutstanding = vault.report(profit, loss, debtPayment); // Send tokens to Vault
-        } else {
-            // The usual flow
-            if (!_overrideMode) { 
-                // Do the calls on the position
-                (profit, loss, debtPayment) = prepareRebalance(debtOutstanding); // debtPayment always equals debtOutstanding here
-
-                if (debtOutstanding > 0) { // We gonna have to pay the vault
-                    adjustPosition(debtOutstanding);
-                    // This is where the strategy either pays the vault or gets credit tokens from vault        
-                    debtOutstanding = vault.report(profit, loss, debtPayment);
-                } else { // The Vault is gonna pay us (or no tokens to be transferred)
-                    debtOutstanding = vault.report(profit, loss, debtPayment);
-                    adjustPosition(debtOutstanding);
-                }
-            } else {
-                // In override mode, just adjust the position and chill about 
-                // everything else
-                adjustPosition(0);
-            }
-        }
-
-        // In this particular DN tend strategy we need to know beforehand whether we pay
-        // the vault or the vault pays us. 
-        // If vault pays us, we need the tokens before performing rebalance. 
-        // If we pay the vault, the rebalance will free the tokens and we'll have the tokens
-        // after. 
-
-        // There's a problem tho - in the vault, the credit to or debit from strategy 
-        // is done in the report. 
-        // That means - we need to know when to call the report - before or after adjustPosition. 
-        // Cuz it will depend on the case. 
-
-        // Need to figure out here beforehand whether the vault is gonna pay us,
-        // Or if we are going to need to pay the vault. 
-        // That consideration will be fulfilled mostly by: 
-        // Knowing what our debtLimit is, and whether we are over or under it. 
-        // >>> Actually the debtOutstanding takes care of that. If it is 0, the vault 
-        // is probably going to pay us and we should expect that. If it is > 0, then 
-        // We are gonna need to pay the vault. 
-
-        // I will add a rebalancing override mode where these considerations are neglected
-        // In case a bug here jams the mechanism, we can still rebalance. 
-
-        // ********
-        // Still need some health check stuff here
-
-        emit Tended(profit, loss, debtPayment, debtOutstanding);
     }
+
+ 
 
     function prepareRebalance(uint256 _debtOutstanding)
         internal
@@ -860,7 +795,7 @@ abstract contract BaseStrategy {
         debtOutstanding = vault.report(profit, loss, debtPayment);
 
         // Check if free returns are left, and re-invest them
-        addToPosition(debtOutstanding);
+        adjustPosition(debtOutstanding);
 
         // call healthCheck contract
         if (doHealthCheck && healthCheck != address(0)) {

@@ -47,6 +47,8 @@ contract Strategy is BaseStrategy, HomoraFarmHandler {
     uint private longPositionId;
     uint private shortPositionId;
 
+    event Tended(uint256 profit, uint256 loss, uint256 debtPayment, uint256 debtOutstanding);
+
     // solhint-disable-next-line no-empty-blocks
     constructor(
         address _vault,
@@ -166,11 +168,76 @@ contract Strategy is BaseStrategy, HomoraFarmHandler {
         _debtPayment = _debtOutstanding;
     }
 
+    function tend(bool _overrideMode) internal override {
+        uint256 debtOutstanding = vault.debtOutstanding(); // How much the vault expects the strategy to pay back
+        uint256 profit = 0;
+        uint256 loss = 0;
+        uint256 debtPayment = 0; // Amount to pay back to the vault 
+
+        if (emergencyExit) {
+            // Free up as much capital as possible
+            uint256 amountFreed = liquidateAllPositions();
+            if (amountFreed < debtOutstanding) {
+                loss = debtOutstanding.sub(amountFreed);
+            } else if (amountFreed > debtOutstanding) {
+                profit = amountFreed.sub(debtOutstanding);
+            }
+            debtPayment = debtOutstanding.sub(loss);
+            debtOutstanding = vault.report(profit, loss, debtPayment); // Send tokens to Vault
+        } else {
+            // The usual flow
+            if (!_overrideMode) { 
+                // Do the calls on the position
+                (profit, loss, debtPayment) = prepareRebalance(debtOutstanding); // debtPayment always equals debtOutstanding here
+
+                if (debtOutstanding > 0) { // We gonna have to pay the vault
+                    rebalancePosition(debtOutstanding);
+                    // This is where the strategy either pays the vault or gets credit tokens from vault        
+                    debtOutstanding = vault.report(profit, loss, debtPayment);
+                } else { // The Vault is gonna pay us (or no tokens to be transferred)
+                    debtOutstanding = vault.report(profit, loss, debtPayment);
+                    rebalancePosition(debtOutstanding);
+                }
+            } else {
+                // In override mode, just adjust the position and chill about 
+                // everything else
+                rebalancePosition(0);
+            }
+        // In this particular DN tend strategy we need to know beforehand whether we pay
+        // the vault or the vault pays us. 
+        // If vault pays us, we need the tokens before performing rebalance. 
+        // If we pay the vault, the rebalance will free the tokens and we'll have the tokens
+        // after. 
+
+        // There's a problem tho - in the vault, the credit to or debit from strategy 
+        // is done in the report. 
+        // That means - we need to know when to call the report - before or after adjustPosition. 
+        // Cuz it will depend on the case. 
+
+        // Need to figure out here beforehand whether the vault is gonna pay us,
+        // Or if we are going to need to pay the vault. 
+        // That consideration will be fulfilled mostly by: 
+        // Knowing what our debtLimit is, and whether we are over or under it. 
+        // >>> Actually the debtOutstanding takes care of that. If it is 0, the vault 
+        // is probably going to pay us and we should expect that. If it is > 0, then 
+        // We are gonna need to pay the vault. 
+
+        // I will add a rebalancing override mode where these considerations are neglected
+        // In case a bug here jams the mechanism, we can still rebalance. 
+
+        // ********
+        // Still need some health check stuff here
+
+        emit Tended(profit, loss, debtPayment, debtOutstanding);
+
+    }
+
+
     // Add: Function to change the farm leverage // TODO 
 
     // ********* For Homora - Sushiswap ********** 
     // solhint-disable-next-line no-empty-blocks
-    function adjustPosition(uint256 _debtOutstanding) internal override {
+    function rebalancePosition(uint256 _debtOutstanding) internal {
         // TODO: Do something to invest excess `want` tokens (from the Vault) into your positions
         // NOTE: Try to adjust positions so that `_debtOutstanding` can be freed up on *next* harvest (not immediately)
         
@@ -370,8 +437,7 @@ contract Strategy is BaseStrategy, HomoraFarmHandler {
 
     }
 
-
-    function addToPosition(uint256 _debtOutstanding) internal override {
+    function adjustPosition(uint256 _debtOutstanding) internal override {
         // Get these values all from a homora view function
         uint256 longLoanValue    = getBorrowETHValue(longPositionId);
         uint256 shortLoanValue   = getBorrowETHValue(shortPositionId);
