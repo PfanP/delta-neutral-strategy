@@ -203,6 +203,7 @@ contract Strategy is BaseStrategy, HomoraFarmHandler {
                 // everything else
                 rebalancePosition(0);
             }
+        }
         // In this particular DN tend strategy we need to know beforehand whether we pay
         // the vault or the vault pays us. 
         // If vault pays us, we need the tokens before performing rebalance. 
