@@ -11,6 +11,7 @@ import "../../../utils/VyperDeployer.sol";
 
 // NOTE: if the name of the strat or file changes this needs to be updated
 import {Strategy} from "../../contracts/Strategy.sol";
+import {UniswapV2Swapper} from "../../contracts/swapper/UniswapV2Swapper.sol";
 
 // Artifact paths for deploying from the deps folder, assumes that the command is run from
 // the project root.
@@ -34,6 +35,7 @@ contract StrategyFixture is ExtendedTest {
     address token0 = 0x0000000000000000000000000000000000000000;
     address token1 = 0x0000000000000000000000000000000000000000;
     address swapper = 0x0000000000000000000000000000000000000000;
+    address sushiswapRouter = 0x0000000000000000000000000000000000000000;
     uint farmLeverage = 3;
     address concaveOracle = 0x0000000000000000000000000000000000000000;
     address lpToken = 0x0000000000000000000000000000000000000000;
@@ -62,6 +64,7 @@ contract StrategyFixture is ExtendedTest {
     function setUp() public virtual {
         _setTokenPrices();
         _setTokenAddrs();
+        _setStrategyParamAddrs();
 
         emit log_uint(1);
         // Choose a token from the tokenAddrs mapping, see _setTokenAddrs for options
@@ -232,5 +235,14 @@ contract StrategyFixture is ExtendedTest {
         tokenPrices["USDT"] = 1;
         tokenPrices["USDC"] = 1;
         tokenPrices["DAI"] = 1;
+    }
+
+    function _setStrategyParamAddrs() internal {
+        homoraBank = 0xba5eBAf3fc1Fcca67147050Bf80462393814E54B;
+        sushiSwapSpell = 0xDc9c7A2Bae15dD89271ae5701a6f4DB147BAa44C;
+        token0 = 0x6B3595068778DD592e39A122f4f5a5cF09C90fE2;
+        token1 = 0xC02aaA39b223FE8D0A0e5C4F27eAD9083C756Cc2;
+        sushiswapRouter = 0xd9e1cE17f2641f24aE83637ab66a2cca9C378B9F;
+        swapper = address(new UniswapV2Swapper(sushiswapRouter));
     }
 }

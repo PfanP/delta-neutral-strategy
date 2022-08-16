@@ -277,7 +277,7 @@ abstract contract HomoraFarmHandler {
 
     /// @dev Return the sushi token from the master chef
     function getSushi() public view returns (IERC20) {
-        IWMasterChef chef = IHomoraSushiSpell(sushiSwapSpell).wmasterchef();
+        IWMasterChef chef = IHomoraSushiSpell(relevantHomoraSpell).wmasterchef();
         return chef.sushi();
     }
 
