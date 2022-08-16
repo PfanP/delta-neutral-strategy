@@ -373,13 +373,17 @@ contract Strategy is BaseStrategy, HomoraFarmHandler {
 
     function addToPosition(uint256 _debtOutstanding) internal override {
         // Get these values all from a homora view function
-        uint longEquityValue;
-        uint longLoanValue;
-        uint shortEquityValue;
-        uint shortLoanValue; 
-        uint256 harvestValue = (getPendingRewardForSushiswap(longPositionId) +
-            getPendingRewardForSushiswap(shortPositionId) +
-            want.balanceOf(address(this))) * getETHPx(address(want));
+        uint256 longLoanValue    = getBorrowETHValue(longPositionId);
+        uint256 shortLoanValue   = getBorrowETHValue(shortPositionId);
+        uint256 longEquityValue  = getCollateralETHValue(longPositionId) - longLoanValue;
+        uint256 shortEquityValue = getCollateralETHValue(shortPositionId) - shortLoanValue;
+
+
+        (uint wantTokenUnits,) = IConcaveOracle(concaveOracle).getPrice(
+            ethTokenAddress,
+            address(want)
+        );
+        uint256 harvestValue = (want.balanceOf(address(this))) * wantTokenUnits;
 
         DeltaNeutralMetadata memory data = DeltaNeutralMetadata(
             longEquityValue,
@@ -396,6 +400,18 @@ contract Strategy is BaseStrategy, HomoraFarmHandler {
         uint shortEquityAdd = data.getShortEquityAdd(desiredAdjustment);
         uint shortLoadAdd = data.getShortLoanAdd(desiredAdjustment);
 
+
+        (uint token0Units, ) = IConcaveOracle(concaveOracle).getPrice(
+            ethTokenAddress,
+            token0
+        );
+        (uint token1Units, ) = IConcaveOracle(concaveOracle).getPrice(
+            ethTokenAddress,
+            token1
+        );
+
+        longEquityAdd = longEquityAdd * token0Units;
+        longLoanAdd = longLoanAdd * token0Units;
         // Call Add Position
         // Position Long
         uint longPositionIdReturn = openOrIncreasePositionSushiswap(
@@ -412,6 +428,8 @@ contract Strategy is BaseStrategy, HomoraFarmHandler {
         // Rebalancing: Say Eth price goes up
         // This farm is underlevereaged now
 
+        shortEquityAdd = shortEquityAdd * token0Units;
+        shortLoadAdd = shortLoadAdd * token1Units;
         // Position Two
         uint shortPositionIdReturn = openOrIncreasePositionSushiswap(
                 shortPositionId, 
