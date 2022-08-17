@@ -12,6 +12,9 @@ import "../../lib/dn-chad-math/DopeAssMathLib.sol";
 // Import Homora Farm Functions
 import {HomoraFarmHandler} from "../contracts/homora/HomoraFarmHandler.sol";
 
+// Import Swapper Functions
+import {UniswapV2Swapper} from "../contracts/swapper/UniswapV2Swapper.sol";
+
 // These are the core Yearn libraries
 import {BaseStrategy, StrategyParams} from "./yearn/BaseStrategy.sol";
 import "../interfaces/IHomoraFarmHandler.sol";
@@ -24,9 +27,8 @@ import {SafeERC20} from "@openzeppelin/contracts/token/ERC20/utils/SafeERC20.sol
 
 // Import interfaces for many popular DeFi projects, or add your own!
 //import "./interfaces/<protocol>/<Interface>.sol";
-import "../interfaces/ISwapperImpl.sol";
 
-contract Strategy is BaseStrategy, HomoraFarmHandler {
+contract Strategy is BaseStrategy, HomoraFarmHandler, UniswapV2Swapper {
     using SafeERC20 for IERC20;
     using Address for address;
     using DeltaNeutralMathLib for DeltaNeutralMetadata;
@@ -41,8 +43,7 @@ contract Strategy is BaseStrategy, HomoraFarmHandler {
     address private token0; // Token0 is the long token
     address private token1; // Token1 is the shorted token
     address private lpToken;
-    address public swapper;
-
+    
     uint private farmLeverage;
     uint private longPositionId;
     uint private shortPositionId;
@@ -54,7 +55,7 @@ contract Strategy is BaseStrategy, HomoraFarmHandler {
         address _vault,
         address _homoraBank,
         address _sushiSwapSpell,
-        address _swapper,
+        address _uniswapV2Router,
         address _token0,
         address _token1,
         uint _farmLeverage,
@@ -62,6 +63,7 @@ contract Strategy is BaseStrategy, HomoraFarmHandler {
         address _lpToken
     ) BaseStrategy(_vault) 
     HomoraFarmHandler(_homoraBank, _sushiSwapSpell) 
+    UniswapV2Swapper(_uniswapV2Router)
     {
         // You can set these parameters on deployment to whatever you want
         // maxReportDelay = 6300;
@@ -71,15 +73,10 @@ contract Strategy is BaseStrategy, HomoraFarmHandler {
         token0 = _token0;
         token1 = _token1;
         farmLeverage = _farmLeverage;
-        swapper = _swapper;
         longPositionId = 0;
         shortPositionId = 0;
         concaveOracle = _concaveOracle;
         lpToken = _lpToken;
-
-        // approve tokens to the swapper
-        IERC20(token1).safeApprove(swapper, type(uint256).max);
-        getSushi().safeApprove(swapper, type(uint256).max);
     }
 
     // ******** OVERRIDE THESE METHODS FROM BASE CONTRACT ************
@@ -117,7 +114,7 @@ contract Strategy is BaseStrategy, HomoraFarmHandler {
 
         // swap sushi token into the want token
         uint256 amountIn = getSushi().balanceOf(address(this));
-        ISwapperImpl(swapper).swap(address(getSushi()), amountIn, address(want), address(this));
+        swap(address(getSushi()), amountIn, address(want), address(this));
 
         uint256 totalAssets = estimatedTotalAssets();
         uint256 totalDebt = vault.strategies(address(this)).totalDebt;
@@ -582,7 +579,7 @@ contract Strategy is BaseStrategy, HomoraFarmHandler {
         // swap the token 1 into token 0 here
         uint256 token1Amount = IERC20(token1).balanceOf(address(this));
         if (token1Amount > 0) {
-            ISwapperImpl(swapper).swap(
+            swap(
                 token1,
                 token1Amount,
                 token0,
@@ -631,7 +628,7 @@ contract Strategy is BaseStrategy, HomoraFarmHandler {
         // swap the token 1 into token 0 here
         uint256 token1Amount = IERC20(token1).balanceOf(address(this));
         if (token1Amount > 0) {
-            ISwapperImpl(swapper).swap(
+            swap(
                 token1,
                 token1Amount,
                 token0,

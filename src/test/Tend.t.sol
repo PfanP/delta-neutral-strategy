@@ -10,13 +10,10 @@ import {IVault} from "../interfaces/IVault.sol";
 import "../../utils/VyperDeployer.sol";
 import {VyperTest} from "../../utils/VyperTest.sol";
 import "../Token.sol";
-import {UniswapV2Swapper} from "../contracts/swapper/UniswapV2Swapper.sol";
-
 
 contract TendTest is ExtendedTest, VyperTest {
     Strategy DNStrategy;
     Token vaultToken;
-    UniswapV2Swapper swapper;
 
     address gov = 0x0000000000000000000000000000000000000010;
     address rewards = 0x0000000000000000000000000000000000000100;
@@ -35,7 +32,6 @@ contract TendTest is ExtendedTest, VyperTest {
 
     function setUp() public {
         vaultToken = new Token();
-        swapper = new UniswapV2Swapper(router);
 
         //string memory vaultArtifact = "artifacts/Vault.json";
         //address _vaultAddress = deployCode(vaultArtifact);
@@ -58,12 +54,11 @@ contract TendTest is ExtendedTest, VyperTest {
             //_management
         );
 
-        emit log_address(address(swapper));
         DNStrategy = new Strategy(
             address(vault),
             hBank,
             sushiSwapSpell,
-            address(swapper),
+            router,
             token0,
             token1,
             farmLeverage,
