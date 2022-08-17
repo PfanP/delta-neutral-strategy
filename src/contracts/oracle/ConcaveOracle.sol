@@ -90,7 +90,7 @@ contract ConcaveOracle is IBaseOracle, Governable {
     function getPrice(address token, address unitToken)
         public
         view
-        override
+        // override
         returns (uint256, uint256)
     {
         if (unitToken == WETH) {
