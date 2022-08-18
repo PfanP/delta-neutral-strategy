@@ -11,6 +11,7 @@ import "../../lib/dn-chad-math/DopeAssMathLib.sol";
 
 // Import Homora Farm Functions
 import {HomoraFarmHandler} from "../contracts/homora/HomoraFarmHandler.sol";
+import {HomoraFarmSimulator} from "../contracts/homora/HomoraFarmSimulator.sol";
 
 // Import Swapper Functions
 import {UniswapV2Swapper} from "../contracts/swapper/UniswapV2Swapper.sol";
@@ -28,7 +29,7 @@ import {SafeERC20} from "@openzeppelin/contracts/token/ERC20/utils/SafeERC20.sol
 // Import interfaces for many popular DeFi projects, or add your own!
 //import "./interfaces/<protocol>/<Interface>.sol";
 
-contract Strategy is BaseStrategy, HomoraFarmHandler, UniswapV2Swapper {
+contract Strategy is BaseStrategy, HomoraFarmSimulator, UniswapV2Swapper {
     using SafeERC20 for IERC20;
     using Address for address;
     using DeltaNeutralMathLib for DeltaNeutralMetadata;
@@ -49,6 +50,11 @@ contract Strategy is BaseStrategy, HomoraFarmHandler, UniswapV2Swapper {
     uint private shortPositionId;
 
     event Tended(uint256 profit, uint256 loss, uint256 debtPayment, uint256 debtOutstanding);
+    
+    //// DEBUG EVENTS ////
+    event debugUint(uint256 emitUint);
+    event debugBool(bool emitBool);
+    event debugString(string str);
 
     // solhint-disable-next-line no-empty-blocks
     constructor(
@@ -62,7 +68,7 @@ contract Strategy is BaseStrategy, HomoraFarmHandler, UniswapV2Swapper {
         address _concaveOracle,
         address _lpToken
     ) BaseStrategy(_vault) 
-    HomoraFarmHandler(_homoraBank, _sushiSwapSpell) 
+    HomoraFarmSimulator(_homoraBank, _sushiSwapSpell) 
     UniswapV2Swapper(_uniswapV2Router)
     {
         // You can set these parameters on deployment to whatever you want
@@ -80,6 +86,14 @@ contract Strategy is BaseStrategy, HomoraFarmHandler, UniswapV2Swapper {
     }
 
     // ******** OVERRIDE THESE METHODS FROM BASE CONTRACT ************
+
+    function setLongPositionId(uint _longPositionId) external onlyStrategist {
+        longPositionId = _longPositionId;
+    }
+
+    function setShortPositionId(uint _shortPositionId) external onlyStrategist {
+        shortPositionId = _shortPositionId;
+    }
 
     function name() external view override returns (string memory) {
         // Add your own name here, suggestion e.g. "StrategyCreamYFI"
@@ -167,10 +181,11 @@ contract Strategy is BaseStrategy, HomoraFarmHandler, UniswapV2Swapper {
 
     function tend(bool _overrideMode) external override onlyKeepers {
         uint256 debtOutstanding = vault.debtOutstanding(); // How much the vault expects the strategy to pay back
+        emit debugUint(debtOutstanding);
         uint256 profit = 0;
         uint256 loss = 0;
         uint256 debtPayment = 0; // Amount to pay back to the vault 
-
+        
         if (emergencyExit) {
             // Free up as much capital as possible
             uint256 amountFreed = liquidateAllPositions();
@@ -238,14 +253,24 @@ contract Strategy is BaseStrategy, HomoraFarmHandler, UniswapV2Swapper {
     ) internal {
         // TODO: Do something to invest excess `want` tokens (from the Vault) into your positions
         // NOTE: Try to adjust positions so that `_debtOutstanding` can be freed up on *next* harvest (not immediately)
-        
+
         DeltaNeutralMetadata memory data;
-        
+
         // Values in ETH
         uint256 longLoanValue    = getBorrowETHValue(longPositionId);
         uint256 shortLoanValue   = getBorrowETHValue(shortPositionId);
         uint256 longEquityValue  = getCollateralETHValue(longPositionId) - longLoanValue;
         uint256 shortEquityValue = getCollateralETHValue(shortPositionId) - shortLoanValue;
+
+        emit debugString('Long Equity Value:');
+        emit debugUint(longEquityValue);
+        emit debugString('Long Loan Value:');
+        emit debugUint(longLoanValue);
+        emit debugString('Short Equity Value:');
+        emit debugUint(shortEquityValue);
+        emit debugString('Short Loan Value:');
+        emit debugUint(shortLoanValue);
+
 
         data = DeltaNeutralMetadata(
             longEquityValue,
@@ -263,6 +288,18 @@ contract Strategy is BaseStrategy, HomoraFarmHandler, UniswapV2Swapper {
         uint256 shortEquityTarget = data.shortEquityRebalanceTarget(desiredAdjustment);
         uint256 shortLoanTarget = data.shortLoanRebalanceTarget(desiredAdjustment);
         
+        emit debugBool(true); // A divider for visual clarity 
+        emit debugString('DAF:');
+        emit debugUint(desiredAdjustment);
+        emit debugString('Long Equity Target:');
+        emit debugUint(longEquityTarget);
+        emit debugString('Long Loan Target:');
+        emit debugUint(longLoanTarget);
+        emit debugString('Short Equity Target:');
+        emit debugUint(shortEquityTarget);
+        emit debugString('Short Loan Target:');
+        emit debugUint(shortLoanTarget);
+
         performRebalance(
             longEquityTarget,
             longEquityValue,
@@ -312,6 +349,9 @@ contract Strategy is BaseStrategy, HomoraFarmHandler, UniswapV2Swapper {
         (,,,uint256 longLpTokenAmount) = getPositionInfo(longPositionId);
         (,,,uint256 shortLpTokenAmount) = getPositionInfo(shortPositionId);
 
+        emit debugUint(longLpTokenAmount);
+        emit debugUint(shortLpTokenAmount);
+
         //// ACTION 1 ////
         // Reduce the long equity position if necessary
         if (longEquityTarget < longEquityValue) {
@@ -336,15 +376,17 @@ contract Strategy is BaseStrategy, HomoraFarmHandler, UniswapV2Swapper {
                 0, // Repay token1
                 longLpLoanPayback // Repay in LP amounts
             ); 
+            emit debugUint(1);
         }
 
         //// ACTION 2 ////
         // Reduce the short equity position if necessary
         if (shortEquityTarget < shortEquityValue) {
             uint shortLpRemove = shortLpTokenAmount * ((shortEquityValue - shortEquityTarget) / shortEquityValue); 
-            
+
             // TODO: Redefine the lpToken var - ID needs figuring
-            uint extraLPBal = IERC1155(lpToken).balanceOf(address(this), 0);  
+            // extraLPBal = IERC1155(lpToken).balanceOf(address(this), 0);  
+            uint extraLPBal = 0;
 
             // Calculate the loan payback in LP units
             uint shortLpLoanPayback = 0;
@@ -365,6 +407,7 @@ contract Strategy is BaseStrategy, HomoraFarmHandler, UniswapV2Swapper {
                 0, // Repay token1
                 shortLpLoanPayback // Repay in LP amounts
             ); 
+            emit debugUint(2);
         }
 
         ///// ACTION 3 /////
@@ -372,7 +415,9 @@ contract Strategy is BaseStrategy, HomoraFarmHandler, UniswapV2Swapper {
         // NOTE: Maybe need to add a statement here to prevent overpaying the loan
         
         // TODO: Redefine the lpToken var - ID needs figuring
-        uint action3LpTokenBal = IERC1155(lpToken).balanceOf(address(this), 0);
+        //uint action3LpTokenBal = IERC1155(lpToken).balanceOf(address(this), 0);
+        uint action3LpTokenBal = 0;
+
         if (action3LpTokenBal > 0 && longLoanTarget < getBorrowETHValue(longPositionId)) {
                 reducePositionSushiswap(
                     longPositionId, 
@@ -383,7 +428,8 @@ contract Strategy is BaseStrategy, HomoraFarmHandler, UniswapV2Swapper {
                     0, // Repay token0
                     0, // Repay token1
                     action3LpTokenBal // Repay in LP amounts
-                ); 
+                );
+                emit debugUint(3);
         }
 
         ///// ACTION 4 /////
@@ -407,6 +453,7 @@ contract Strategy is BaseStrategy, HomoraFarmHandler, UniswapV2Swapper {
                 0,
                 0 // Place in the Sushiswap PID
             );
+            emit debugUint(4);
         }
 
         ///// ACTION 5 /////
@@ -431,6 +478,7 @@ contract Strategy is BaseStrategy, HomoraFarmHandler, UniswapV2Swapper {
                 shortLoanTake, // Token 1
                 0 // Place in the Sushiswap PID
             );
+            emit debugUint(5);
         }
 
     }

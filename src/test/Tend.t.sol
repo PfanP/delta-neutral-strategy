@@ -66,14 +66,44 @@ contract TendTest is ExtendedTest, VyperTest {
             lpToken
         );
 
-        emit log_uint(3);
-        DNStrategy.setKeeper(keeper);
+
     }
 
+    uint _longPositionId = 1;
+    uint _shortPositionId = 2;
+
+    uint _mockHarvestAmount = 0;
+    uint _longPositionEquityETH = 1e18;
+    uint _longPositionLoanETH = 3e18;
+    uint _shortPositionEquityETH = 1e18;
+    uint _shortPositionLoanETH = 3e18; 
+    uint _longLPAmount = 2e18;
+    uint _shortLPAmount = 2e18;
+
+    uint _longPositionDebtToken0 = 20e18;
+    //uint _longPositionDebtToken1 = 0;
+    //uint _shortPositionDebtToken0 = 0;
+    uint _shortPositionDebtToken1 = 3e18;
+
     function test_tend() public {
+        DNStrategy.setShortPositionId(_shortPositionId);
+        DNStrategy.setLongPositionId(_longPositionId);
 
-        //DNStrategy.tend(true);
+        DNStrategy.initialize_farmSimulator(
+            _mockHarvestAmount, 
+            _longPositionEquityETH, 
+            _longPositionLoanETH, 
+            _shortPositionEquityETH, 
+            _shortPositionLoanETH, 
+            _longLPAmount, 
+            _shortLPAmount,
+            _longPositionDebtToken0,
+            _shortPositionDebtToken1,
+            _longPositionId,
+            _shortPositionId
+        );
 
+        DNStrategy.tend(true);
 
     }
 

@@ -17,7 +17,6 @@ abstract contract HomoraFarmHandler {
 
     address public immutable homoraBank;
     address public immutable relevantHomoraSpell;
-    address public immutable sushiSwapSpell;
 
     struct Amounts {
         uint256 amtAUser; // Supplied tokenA amount
@@ -46,7 +45,6 @@ abstract contract HomoraFarmHandler {
     ) {
         homoraBank = _homoraBank;
         relevantHomoraSpell = _relevantHomoraSpell;
-        sushiSwapSpell = 0x0000000000000000000000000000000000000000;
     }
 
     // *** Sushiswap *** //
@@ -171,7 +169,7 @@ abstract contract HomoraFarmHandler {
             uint256 collId,
             uint256 collateralSize
         ) = getPositionInfo(_positionId);
-        IWMasterChef chef = IHomoraSushiSpell(sushiSwapSpell).wmasterchef();
+        IWMasterChef chef = IHomoraSushiSpell(relevantHomoraSpell).wmasterchef();
         (uint256 decodedPid, uint256 startTokenPerShare) = chef.decodeId(
             collId
         );

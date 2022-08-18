@@ -23,15 +23,18 @@ abstract contract HomoraFarmSimulator {
     address farmToken = 0x0000000000000000000000000000000000100000;
 
     uint mockHarvestAmount;
-    uint longPositionETH;
-    uint shortPositionETH;
+    uint longPositionEquityETH;
+    uint shortPositionEquityETH;
     uint longPositionLoanETH;
     uint shortPositionLoanETH;
     uint longLPAmount;
     uint shortLPAmount;
 
-    uint longPositionId = 0;
-    uint shortPositionId = 1;
+    uint longPositionDebtToken0;
+    uint shortPositionDebtToken1;
+
+    uint longPosId;
+    uint shortPosId;
 
     struct Amounts {
         uint256 amtAUser; // Supplied tokenA amount
@@ -63,22 +66,32 @@ abstract contract HomoraFarmSimulator {
         sushiSwapSpell = _relevantHomoraSpell;
     }
 
-    function initialize(
+    function initialize_farmSimulator(
         uint _mockHarvestAmount,
-        uint _longPositionETH,
+        uint _longPositionEquityETH,
         uint _longPositionLoanETH,
-        uint _shortPositionETH,
+        uint _shortPositionEquityETH,
         uint _shortPositionLoanETH,
         uint _longLPAmount,
-        uint _shortLPAmount
+        uint _shortLPAmount,
+        uint _longPositionDebtToken0,
+        uint _shortPositionDebtToken1,
+        uint _longPosId,
+        uint _shortPosId
     ) external {
         mockHarvestAmount = _mockHarvestAmount;
-        longPositionETH = _longPositionETH;
+        longPositionEquityETH = _longPositionEquityETH;
         longPositionLoanETH = _longPositionLoanETH;
-        shortPositionETH = _shortPositionETH;
+        shortPositionEquityETH = _shortPositionEquityETH;
         shortPositionLoanETH = _shortPositionLoanETH;
         longLPAmount = _longLPAmount;
         shortLPAmount = _shortLPAmount;
+
+        longPositionDebtToken0 = _longPositionDebtToken0;
+        shortPositionDebtToken1 = _shortPositionDebtToken1;
+
+        longPosId = _longPosId;
+        shortPosId = _shortPosId;
     }
 
     // *** Sushiswap *** //
@@ -100,6 +113,7 @@ abstract contract HomoraFarmSimulator {
     }
 
     function reducePositionSushiswap( 
+        uint256 positionID,
         address token0,
         address token1,
         uint256 amtLPTake,
@@ -137,13 +151,13 @@ abstract contract HomoraFarmSimulator {
             uint256 collateralSize
         )
     {   
-        if (positionId == longPositionId) {
+        if (positionId == longPosId) {
             return (
                 0x0000000000000000000000000000000000000000,
                 0x0000000000000000000000000000000000000000,
                 0,
                 longLPAmount);
-        } else if (positionId == shortPositionId) {
+        } else if (positionId == shortPosId) {
             return (
                 0x0000000000000000000000000000000000000000,
                 0x0000000000000000000000000000000000000000,
@@ -160,15 +174,29 @@ abstract contract HomoraFarmSimulator {
 
     /// @dev Return the list of all debts for the given position id.
     /// @param positionId position id to get debts of
-    /*
+    
     function getPositionDebts(uint256 positionId)
         public
         view
         returns (address[] memory tokens, uint256[] memory debts)
     {
-        return IHomoraBank(homoraBank).getPositionDebts(positionId);
+        address[] memory emptyArray = new address[](0);
+        uint[] memory debtAmounts = new uint[](2);
+        if (positionId == longPosId) {
+            debtAmounts[0] = longPositionDebtToken0;
+            debtAmounts[1] = 0;
+        } else if (positionId == shortPosId) {
+            debtAmounts[0] = 0;
+            debtAmounts[1] = shortPositionDebtToken1;
+        } else {
+            debtAmounts[0] = 0;
+            debtAmounts[1] = 0;
+        }
+
+        return (emptyArray,debtAmounts);
     }
 
+    /*
     /// @dev Return the debt share of the given bank token for the given position id.
     /// @param positionId position id to get debt of
     /// @param token ERC20 debt token to query
@@ -222,10 +250,10 @@ abstract contract HomoraFarmSimulator {
         view
         returns (uint256)
     {
-        if (positionId == longPositionId) {
-            return longPositionETH;
-        } else if (positionId == shortPositionId) {
-            return shortPositionETH;
+        if (positionId == longPosId) {
+            return longPositionEquityETH + longPositionLoanETH;
+        } else if (positionId == shortPosId) {
+            return shortPositionEquityETH + shortPositionLoanETH;
         } else {
             return 0;
         }
@@ -238,9 +266,9 @@ abstract contract HomoraFarmSimulator {
         view
         returns (uint256)
     {
-        if (positionId == longPositionId) {
+        if (positionId == longPosId) {
             return longPositionLoanETH;
-        } else if (positionId == shortPositionId) {
+        } else if (positionId == shortPosId) {
             return shortPositionLoanETH;
         } else {
             return 0;
