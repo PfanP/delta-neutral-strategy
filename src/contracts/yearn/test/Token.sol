@@ -52,8 +52,6 @@ contract TokenNoReturn {
         totalSupply = 30000 * 10**uint256(decimals);
     }
 
-
-
     function _setBlocked(address user, bool value) public virtual {
         _blocked[user] = value;
     }
