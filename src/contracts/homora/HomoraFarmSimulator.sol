@@ -66,7 +66,6 @@ abstract contract HomoraFarmSimulator {
         sushiSwapSpell = _relevantHomoraSpell;
     }
 
-    // Stack is too deep 
     function initialize_farmSimulator(
         uint _mockHarvestAmount,
         uint _longPositionEquityETH,
