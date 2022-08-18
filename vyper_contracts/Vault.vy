@@ -99,7 +99,7 @@ event TestLogAddr:
 
 event TestLogBool:
     flag: bool
-
+# End Debug Events
 
 event Transfer:
     sender: indexed(address)
@@ -228,7 +228,7 @@ event UpdateHealthCheck:
 
 # NOTE: Track the total for overhead targeting purposes
 strategies: public(HashMap[address, StrategyParams])
-MAXIMUM_STRATEGIES: constant(uint256) = 20
+MAXIMUM_STRATEGIES: constant(uint256) = 10
 DEGRADATION_COEFFICIENT: constant(uint256) = 10 ** 18
 # SET_SIZE can be any number but having it in power of 2 will be more gas friendly and collision free.
 # Note: Make sure SET_SIZE is greater than MAXIMUM_STRATEGIES
@@ -1744,9 +1744,12 @@ def report(gain: uint256, loss: uint256, _debtPayment: uint256) -> uint256:
         Amount Strategy has made available to cover outstanding debt
     @return Amount of debt outstanding (if totalDebt > debtLimit or emergency shutdown).
     """
+    log TestLogInt(1331)
 
     # Only approved strategies can call this function
     assert self.strategies[msg.sender].activation > 0
+
+    log TestLogInt(1339)
 
     # Check report is within healthy ranges
     if self.healthCheck != ZERO_ADDRESS:

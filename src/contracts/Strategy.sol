@@ -167,8 +167,11 @@ contract Strategy is BaseStrategy, HomoraFarmSimulator, UniswapV2Swapper {
 
         // Pay back the vault when the debt limit goes down - yes
         // Take more money from the vault? - No that is taken care of in def report()
+        emit debugString('Prepare Rebalance: ');
         uint256 totalAssets = estimatedTotalAssets();
+        emit debugUint(totalAssets);
         uint256 totalDebt   = vault.strategies(address(this)).totalDebt;
+        emit debugUint(totalDebt);
 
         if (totalAssets > totalDebt) {
             _profit = totalAssets - totalDebt;
@@ -176,6 +179,10 @@ contract Strategy is BaseStrategy, HomoraFarmSimulator, UniswapV2Swapper {
             _loss = totalDebt - totalAssets;
         }
         _debtPayment = _debtOutstanding;
+        
+        emit debugUint(_profit);
+        emit debugUint(_loss);
+        emit debugString('End Prepare Rebalance: ');
     }
 
     function tend(bool _overrideMode) external override onlyKeepers {
@@ -202,11 +209,14 @@ contract Strategy is BaseStrategy, HomoraFarmSimulator, UniswapV2Swapper {
                 (profit, loss, debtPayment) = prepareRebalance(debtOutstanding); // debtPayment always equals debtOutstanding here
 
                 if (debtOutstanding > 0) { // We gonna have to pay the vault
+                    emit debugString('Case 1');
                     rebalancePosition(debtOutstanding);
                     // This is where the strategy either pays the vault or gets credit tokens from vault        
                     debtOutstanding = vault.report(profit, loss, debtPayment);
                 } else { // The Vault is gonna pay us (or no tokens to be transferred)
+                    emit debugString('Case 2');
                     debtOutstanding = vault.report(profit, loss, debtPayment);
+                    emit debugString('Finish Vault Report');
                     rebalancePosition(debtOutstanding);
                 }
             } else {
