@@ -38,7 +38,6 @@ contract Strategy is BaseStrategy, HomoraFarmSimulator, UniswapV2Swapper {
     uint private constant MULTIPLIER = 10000; // (10000 = 100% = 1)
 
     // The token pairs which will go into the Homora Farm
-    address public homoraFarmHandler;
     address public concaveOracle;
     address public ethTokenAddress;
     address private token0; // Token0 is the long token
