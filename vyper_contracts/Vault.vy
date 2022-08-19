@@ -1744,12 +1744,10 @@ def report(gain: uint256, loss: uint256, _debtPayment: uint256) -> uint256:
         Amount Strategy has made available to cover outstanding debt
     @return Amount of debt outstanding (if totalDebt > debtLimit or emergency shutdown).
     """
-    log TestLogInt(1331)
 
     # Only approved strategies can call this function
     assert self.strategies[msg.sender].activation > 0
 
-    log TestLogInt(1339)
 
     # Check report is within healthy ranges
     if self.healthCheck != ZERO_ADDRESS:
@@ -1833,6 +1831,7 @@ def report(gain: uint256, loss: uint256, _debtPayment: uint256) -> uint256:
         credit,
         self.strategies[msg.sender].debtRatio,
     )
+    log TestLogInt(9)
 
     if self.strategies[msg.sender].debtRatio == 0 or self.emergencyShutdown:
         # Take every last penny the Strategy has (Emergency Exit/revokeStrategy)
