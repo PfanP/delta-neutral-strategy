@@ -12,20 +12,20 @@ contract DeltaNeutralMathLibTest is Test {
     }
 
     function test_getDesiredAdjustment(
-        uint256 _longEquityValue,
-        uint256 _longLoanValue,
-        uint256 _shortEquityValue,
-        uint256 _shortLoanValue,
-        uint256 _harvestValue,
-        uint256 _leverageValue
-    ) public {
+        uint128 _longEquityValue,
+        uint128 _longLoanValue,
+        uint128 _shortEquityValue,
+        uint128 _shortLoanValue,
+        uint128 _harvestValue,
+        uint128 _leverageValue
+    ) public pure {
         DeltaNeutralMetadata memory data = DeltaNeutralMetadata(
-            _longEquityValue,
-            _longLoanValue,
-            _shortEquityValue,
-            _shortLoanValue,
-            _harvestValue,
-            _leverageValue
+            uint256(_longEquityValue),
+            uint256(_longLoanValue),
+            uint256(_shortEquityValue),
+            uint256(_shortLoanValue),
+            uint256(_harvestValue),
+            uint256(_leverageValue)
         );
 
         data.getDesiredAdjustment();
@@ -39,7 +39,7 @@ contract DeltaNeutralMathLibTest is Test {
         uint256 _harvestValue,
         uint256 _leverageValue,
         uint256 desiredAdjustment
-    ) public {
+    ) public pure {
         DeltaNeutralMetadata memory data = DeltaNeutralMetadata(
             _longEquityValue,
             _longLoanValue,
@@ -52,142 +52,142 @@ contract DeltaNeutralMathLibTest is Test {
     }
 
     function test_getShortEquityAdd(
-        uint256 _longEquityValue,
-        uint256 _longLoanValue,
-        uint256 _shortEquityValue,
-        uint256 _shortLoanValue,
-        uint256 _harvestValue,
-        uint256 _leverageValue,
-        uint256 desiredAdjustment
-    ) public {
+        uint128 _longEquityValue,
+        uint128 _longLoanValue,
+        uint128 _shortEquityValue,
+        uint128 _shortLoanValue,
+        uint128 _harvestValue,
+        uint128 _leverageValue,
+        uint128 desiredAdjustment
+    ) public pure {
         DeltaNeutralMetadata memory data = DeltaNeutralMetadata(
-            _longEquityValue,
-            _longLoanValue,
-            _shortEquityValue,
-            _shortLoanValue,
-            _harvestValue,
-            _leverageValue
+            uint256(_longEquityValue),
+            uint256(_longLoanValue),
+            uint256(_shortEquityValue),
+            uint256(_shortLoanValue),
+            uint256(_harvestValue),
+            uint256(_leverageValue)
         );
-        data.getShortEquityAdd(desiredAdjustment);
+        data.getShortEquityAdd(uint256(desiredAdjustment));
     }
 
     function test_getShortLoanAdd(
-        uint256 _longEquityValue,
-        uint256 _longLoanValue,
-        uint256 _shortEquityValue,
-        uint256 _shortLoanValue,
-        uint256 _harvestValue,
-        uint256 _leverageValue,
-        uint256 desiredAdjustment
-    ) public {
+        uint64 _longEquityValue,
+        uint64 _longLoanValue,
+        uint64 _shortEquityValue,
+        uint64 _shortLoanValue,
+        uint64 _harvestValue,
+        uint64 _leverageValue,
+        uint64 desiredAdjustment
+    ) public pure {
         DeltaNeutralMetadata memory data = DeltaNeutralMetadata(
-            _longEquityValue,
-            _longLoanValue,
-            _shortEquityValue,
-            _shortLoanValue,
-            _harvestValue,
-            _leverageValue
+            uint256(_longEquityValue),
+            uint256(_longLoanValue),
+            uint256(_shortEquityValue),
+            uint256(_shortLoanValue),
+            uint256(_harvestValue),
+            uint256(_leverageValue)
         );
-        data.getShortLoanAdd(desiredAdjustment);
+        data.getShortLoanAdd(uint256(desiredAdjustment));
     }
 
     function test_getLongLoanAdd(
-        uint256 _longEquityValue,
-        uint256 _longLoanValue,
-        uint256 _shortEquityValue,
-        uint256 _shortLoanValue,
-        uint256 _harvestValue,
-        uint256 _leverageValue,
-        uint256 desiredAdjustment
-    ) public {
+        uint128 _longEquityValue,
+        uint128 _longLoanValue,
+        uint128 _shortEquityValue,
+        uint128 _shortLoanValue,
+        uint128 _harvestValue,
+        uint128 _leverageValue,
+        uint128 desiredAdjustment
+    ) public pure {
         DeltaNeutralMetadata memory data = DeltaNeutralMetadata(
-            _longEquityValue,
-            _longLoanValue,
-            _shortEquityValue,
-            _shortLoanValue,
-            _harvestValue,
-            _leverageValue
+            uint256(_longEquityValue),
+            uint256(_longLoanValue),
+            uint256(_shortEquityValue),
+            uint256(_shortLoanValue),
+            uint256(_harvestValue),
+            uint256(_leverageValue)
         );
-        data.getLongLoanAdd(desiredAdjustment);
+        data.getLongLoanAdd(uint256(desiredAdjustment));
     }
 
     function test_longEquityRebalanceTarget(
-        uint256 _longEquityValue,
-        uint256 _longLoanValue,
-        uint256 _shortEquityValue,
-        uint256 _shortLoanValue,
-        uint256 _harvestValue,
-        uint256 _leverageValue,
-        uint256 desiredAdjustment
-    ) public {
+        uint128 _longEquityValue,
+        uint128 _longLoanValue,
+        uint128 _shortEquityValue,
+        uint128 _shortLoanValue,
+        uint128 _harvestValue,
+        uint128 _leverageValue,
+        uint128 desiredAdjustment
+    ) public pure {
         DeltaNeutralMetadata memory data = DeltaNeutralMetadata(
-            _longEquityValue,
-            _longLoanValue,
-            _shortEquityValue,
-            _shortLoanValue,
-            _harvestValue,
-            _leverageValue
+            uint256(_longEquityValue),
+            uint256(_longLoanValue),
+            uint256(_shortEquityValue),
+            uint256(_shortLoanValue),
+            uint256(_harvestValue),
+            uint256(_leverageValue)
         );
-        data.longEquityRebalanceTarget(desiredAdjustment);
+        data.longEquityRebalanceTarget(uint256(desiredAdjustment));
     }
 
     function test_shortEquityRebalanceTarget(
-        uint256 _longEquityValue,
-        uint256 _longLoanValue,
-        uint256 _shortEquityValue,
-        uint256 _shortLoanValue,
-        uint256 _harvestValue,
-        uint256 _leverageValue,
-        uint256 desiredAdjustment
-    ) public {
+        uint128 _longEquityValue,
+        uint128 _longLoanValue,
+        uint128 _shortEquityValue,
+        uint128 _shortLoanValue,
+        uint128 _harvestValue,
+        uint128 _leverageValue,
+        uint128 desiredAdjustment
+    ) public pure {
         DeltaNeutralMetadata memory data = DeltaNeutralMetadata(
-            _longEquityValue,
-            _longLoanValue,
-            _shortEquityValue,
-            _shortLoanValue,
-            _harvestValue,
-            _leverageValue
+            uint256(_longEquityValue),
+            uint256(_longLoanValue),
+            uint256(_shortEquityValue),
+            uint256(_shortLoanValue),
+            uint256(_harvestValue),
+            uint256(_leverageValue)
         );
-        data.shortEquityRebalanceTarget(desiredAdjustment);
+        data.shortEquityRebalanceTarget(uint256(desiredAdjustment));
     }
 
     function test_shortLoanRebalanceTarget(
-        uint256 _longEquityValue,
-        uint256 _longLoanValue,
-        uint256 _shortEquityValue,
-        uint256 _shortLoanValue,
-        uint256 _harvestValue,
-        uint256 _leverageValue,
-        uint256 desiredAdjustment
-    ) public {
+        uint128 _longEquityValue,
+        uint128 _longLoanValue,
+        uint128 _shortEquityValue,
+        uint128 _shortLoanValue,
+        uint128 _harvestValue,
+        uint128 _leverageValue,
+        uint128 desiredAdjustment
+    ) public pure {
         DeltaNeutralMetadata memory data = DeltaNeutralMetadata(
-            _longEquityValue,
-            _longLoanValue,
-            _shortEquityValue,
-            _shortLoanValue,
-            _harvestValue,
-            _leverageValue
+            uint256(_longEquityValue),
+            uint256(_longLoanValue),
+            uint256(_shortEquityValue),
+            uint256(_shortLoanValue),
+            uint256(_harvestValue),
+            uint256(_leverageValue)
         );
-        data.shortLoanRebalanceTarget(desiredAdjustment);
+        data.shortLoanRebalanceTarget(uint256(desiredAdjustment));
     }
 
     function test_longLoanRebalanceTarget(
-        uint256 _longEquityValue,
-        uint256 _longLoanValue,
-        uint256 _shortEquityValue,
-        uint256 _shortLoanValue,
-        uint256 _harvestValue,
-        uint256 _leverageValue,
-        uint256 desiredAdjustment
-    ) public {
+        uint128 _longEquityValue,
+        uint128 _longLoanValue,
+        uint128 _shortEquityValue,
+        uint128 _shortLoanValue,
+        uint128 _harvestValue,
+        uint128 _leverageValue,
+        uint128 desiredAdjustment
+    ) public pure {
         DeltaNeutralMetadata memory data = DeltaNeutralMetadata(
-            _longEquityValue,
-            _longLoanValue,
-            _shortEquityValue,
-            _shortLoanValue,
-            _harvestValue,
-            _leverageValue
+            uint256(_longEquityValue),
+            uint256(_longLoanValue),
+            uint256(_shortEquityValue),
+            uint256(_shortLoanValue),
+            uint256(_harvestValue),
+            uint256(_leverageValue)
         );
-        data.longLoanRebalanceTarget(desiredAdjustment);
+        data.longLoanRebalanceTarget(uint256(desiredAdjustment));
     }
 }
