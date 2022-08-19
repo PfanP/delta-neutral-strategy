@@ -155,6 +155,10 @@ contract HarvestTest is ExtendedTest, VyperTest {
             lpToken
         );
         DNStrategy.setFarmToken(address(farmToken));
+        vaultToken.transfer(address(DNStrategy), 100 ether);
+
+        vm.prank(gov);
+        vault.addStrategy(address(DNStrategy), 100, 5, 9, 10);
     }
 
     uint256 _longPositionId = 1;
