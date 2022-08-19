@@ -46,7 +46,7 @@ contract TendTest is ExtendedTest, VyperTest {
         string memory _symbol = 'vCNV';
         vault.initialize(
             address(vaultToken),
-            gov,
+            address(this),
             rewards,
             _name,
             _symbol//,
@@ -66,6 +66,13 @@ contract TendTest is ExtendedTest, VyperTest {
             lpToken
         );
 
+        vault.addStrategy(
+            address(DNStrategy), 
+            10000, // debtRatio
+            0, // _minDebtPerHarvest 
+            0, // _maxDebtPerHarvest 
+            0  // performanceFee
+        );
 
     }
 
@@ -103,7 +110,10 @@ contract TendTest is ExtendedTest, VyperTest {
             _shortPositionId
         );
 
-        DNStrategy.tend(true);
+        // Test the Override Mode
+        //DNStrategy.tend(true);
+
+        DNStrategy.tend(false);
 
     }
 
