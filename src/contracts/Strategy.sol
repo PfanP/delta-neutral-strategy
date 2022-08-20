@@ -36,6 +36,7 @@ contract Strategy is BaseStrategy, HomoraFarmSimulator, UniswapV2Swapper {
     using DopeAssMathLib for uint256;
 
     uint private constant MULTIPLIER = 10000; // (10000 = 100% = 1)
+    uint private constant WAD = 1e18;
 
     // The token pairs which will go into the Homora Farm
     address public concaveOracle;
@@ -184,7 +185,17 @@ contract Strategy is BaseStrategy, HomoraFarmSimulator, UniswapV2Swapper {
 
     }
 
-    function tend(bool _overrideMode) external override onlyKeepers {
+    function tend(bool _overrideMode) external override onlyKeepers
+    returns (
+        uint longLpRemove,
+        uint longLpLoanPayback,
+        uint shortLpRemove,
+        uint shortLpLoanPayback,
+        uint action3LpTokenBal,
+        uint longLoanIncrase,
+        uint shortLoanIncrease
+    )
+      {
 
         if (emergencyExit) {
             uint256 debtOutstanding = vault.debtOutstanding(); // How much the vault expects the strategy to pay back
@@ -209,6 +220,14 @@ contract Strategy is BaseStrategy, HomoraFarmSimulator, UniswapV2Swapper {
                 // Tokens will be transferred to Strategy from Vault here
                 vault.report(0, 0, 0); // Set Profit, loss, debtpayment all to 0
                 emit debugString('Finish Vault Report');
+                
+                (uint longLpRemove,
+                uint longLpLoanPayback,
+                uint shortLpRemove,
+                uint shortLpLoanPayback,
+                uint action3LpTokenBal,
+                uint longLoanIncrase,
+                uint shortLoanIncrease) = 
                 rebalancePosition();
             } else {
                 // In override mode, just adjust the position and chill about 
@@ -248,29 +267,21 @@ contract Strategy is BaseStrategy, HomoraFarmSimulator, UniswapV2Swapper {
 
     // ********* For Homora - Sushiswap ********** 
     // solhint-disable-next-line no-empty-blocks
-    function rebalancePosition() internal {
+    function rebalancePosition() internal 
+    returns (
+        uint longLpRemove,
+        uint longLpLoanPayback,
+        uint shortLpRemove,
+        uint shortLpLoanPayback,
+        uint action3LpTokenBal,
+        uint longLoanIncrase,
+        uint shortLoanIncrease
+    )
+     {
         // TODO: Do something to invest excess `want` tokens (from the Vault) into your positions
         // NOTE: Try to adjust positions so that `_debtOutstanding` can be freed up on *next* harvest (not immediately)
 
-        DeltaNeutralMetadata memory data;
-
-        // Values in ETH
-        uint256 longLoanValue    = getBorrowETHValue(longPositionId);
-        uint256 shortLoanValue   = getBorrowETHValue(shortPositionId);
-        uint256 longEquityValue  = getCollateralETHValue(longPositionId) - longLoanValue;
-        uint256 shortEquityValue = getCollateralETHValue(shortPositionId) - shortLoanValue;
-
-/*
-        emit debugString('Long Equity Value:');
-        emit debugUint(longEquityValue);
-        emit debugString('Long Loan Value:');
-        emit debugUint(longLoanValue);
-        emit debugString('Short Equity Value:');
-        emit debugUint(shortEquityValue);
-        emit debugString('Short Loan Value:');
-        emit debugUint(shortLoanValue); */ 
-
-        /*
+        /* 
         (uint wantTokenUnits,) = IConcaveOracle(concaveOracle).getPrice(
             ethTokenAddress,
             address(want)
@@ -278,15 +289,31 @@ contract Strategy is BaseStrategy, HomoraFarmSimulator, UniswapV2Swapper {
         uint256 liquidityInjection = (want.balanceOf(address(this))) * wantTokenUnits;
         */
         uint256 liquidityInjection = 0;
+
+        DeltaNeutralMetadata memory data;
+
+         // Values in ETH
+        uint256 longLoanValue    = getBorrowETHValue(longPositionId);
+        uint256 shortLoanValue   = getBorrowETHValue(shortPositionId);
+        //uint256 longEquityValue  = getCollateralETHValue(longPositionId) - longLoanValue;
+        //uint256 shortEquityValue = getCollateralETHValue(shortPositionId) - shortLoanValue;
+
         data = DeltaNeutralMetadata(
-            longEquityValue,
+            getCollateralETHValue(longPositionId) - longLoanValue, //longEquityValue
             longLoanValue,
-            shortEquityValue,
+            getCollateralETHValue(shortPositionId) - shortLoanValue, //shortEquityValue
             shortLoanValue,
             liquidityInjection,
-            farmLeverage
+            farmLeverage * WAD
         );
-        
+
+        emit debugString('MetaData Checks: ');
+        emit debugUint(data.longEquityValue);
+        emit debugUint(data.shortEquityValue);
+        emit debugUint(data.harvestValue);
+        emit debugUint(data.leverageValue);
+
+        /*
         // All values here valuated in ETH
         /*
         uint256 longEquityTarget = data.longEquityRebalanceTarget(desiredAdjustment);
@@ -295,38 +322,46 @@ contract Strategy is BaseStrategy, HomoraFarmSimulator, UniswapV2Swapper {
         uint256 shortLoanTarget = data.shortLoanRebalanceTarget(desiredAdjustment);
         */
 
-        /*
-        emit debugBool(true); // A divider for visual clarity 
-        emit debugString('DAF:');
-        emit debugUint(desiredAdjustment);
-        emit debugString('Long Equity Target:');
-        emit debugUint(longEquityTarget);
-        emit debugString('Long Loan Target:');
-        emit debugUint(longLoanTarget);
-        emit debugString('Short Equity Target:');
-        emit debugUint(shortEquityTarget);
-        emit debugString('Short Loan Target:');
-        emit debugUint(shortLoanTarget); */ 
-
         uint256 desiredAdjustment = data.getDesiredAdjustment(); 
         RebalanceData memory rebalanceData;
 
         rebalanceData = RebalanceData(
             data.longEquityRebalanceTarget(desiredAdjustment),
-            longEquityValue,
+            data.longEquityValue,
             data.longLoanRebalanceTarget(desiredAdjustment),
-            longLoanValue,
+            data.longLoanValue,
             data.shortEquityRebalanceTarget(desiredAdjustment),
-            shortEquityValue,
+            data.shortEquityValue,
             data.shortLoanRebalanceTarget(desiredAdjustment),
-            shortLoanValue
+            data.shortLoanValue
         );
-
-
-        performRebalance(
-            rebalanceData
-        );
+            
+        emit debugString('DAF:');
+        emit debugUint(desiredAdjustment);
+        emit debugString('Long Equity Value & Target:');
+        emit debugUint(data.longEquityValue);
+        emit debugUint(rebalanceData.longEquityTarget);
+        emit debugString('Long Loan Value & Target:');
+        emit debugUint(data.longLoanValue);
+        emit debugUint(rebalanceData.longLoanTarget);
+        emit debugString('Short Equity Value & Target:');
+        emit debugUint(data.shortEquityValue);
+        emit debugUint(rebalanceData.shortEquityTarget);
+        emit debugString('Short Loan Value & Target:');
+        emit debugUint(data.shortLoanValue); 
+        emit debugUint(rebalanceData.shortLoanTarget); 
         
+        (
+        uint longLpRemove,
+        uint longLpLoanPayback,
+        uint shortLpRemove,
+        uint shortLpLoanPayback,
+        uint action3LpTokenBal,
+        uint longLoanIncrase,
+        uint shortLoanIncrease) = 
+        performRebalance(rebalanceData);
+        
+
         // Rebalancing: Say Eth price goes up
         // This short farm is underlevereaged now
 
@@ -357,7 +392,15 @@ contract Strategy is BaseStrategy, HomoraFarmSimulator, UniswapV2Swapper {
 
     function performRebalance(
         RebalanceData memory data
-    ) internal {
+    ) internal returns (
+        uint longLpRemove,
+        uint longLpLoanPayback,
+        uint shortLpRemove,
+        uint shortLpLoanPayback,
+        uint action3LpTokenBal,
+        uint longLoanIncrase,
+        uint shortLoanIncrease
+    ) {
         // ACTIONS: 
         // 1. Reduce Position 0 and Payback loan as necessary
         // 2. Reduce Position 1 and Payback loan as necessary
@@ -376,15 +419,25 @@ contract Strategy is BaseStrategy, HomoraFarmSimulator, UniswapV2Swapper {
         // Reduce the long equity position if necessary
         if (data.longEquityTarget < data.longEquityValue) {
             // Calculate the Proportion of LP that corresponds to the percentage 
-            uint256 longLpRemove = longLpTokenAmount * ((data.longEquityValue - data.longEquityTarget) / data.longEquityValue); 
+            uint longLpRemove = longLpTokenAmount * (MULTIPLIER * (data.longEquityValue - data.longEquityTarget) / (data.longEquityValue + data.longLoanValue)) / MULTIPLIER; 
+
+            emit debugString('Long LP Remove');
+            emit debugUint(longLpRemove);
             // Calculate the loan payback in LP units
-            uint longLpLoanPayback = 0;
+            uint256 longLpLoanPayback = 0;
             if (data.longLoanTarget < data.longLoanValue) {
-                longLpLoanPayback = (data.longLoanValue - data.longLoanTarget) / data.longLoanValue;
+                longLpLoanPayback = longLpTokenAmount * (MULTIPLIER * (data.longLoanValue - data.longLoanTarget)) / (data.longEquityValue + data.longLoanValue) / MULTIPLIER;                
                 if (longLpRemove < longLpLoanPayback) {
                     longLpLoanPayback = longLpRemove;
                 }
+
             } 
+
+            emit debugString('Long LP Token Amount');
+            emit debugUint(longLpTokenAmount);
+            emit debugString('Long LP Loan Payback');
+            emit debugUint(longLpLoanPayback);
+
             // LP Remove and Loan Pay on long Pos
             reducePositionSushiswap(
                 longPositionId, 
@@ -399,23 +452,30 @@ contract Strategy is BaseStrategy, HomoraFarmSimulator, UniswapV2Swapper {
             emit debugUint(1);
         }
 
+
         //// ACTION 2 ////
         // Reduce the short equity position if necessary
         if (data.shortEquityTarget < data.shortEquityValue) {
-            uint shortLpRemove = shortLpTokenAmount * ((data.shortEquityValue - data.shortEquityTarget) / data.shortEquityValue); 
+            uint shortLpRemove = shortLpTokenAmount * (MULTIPLIER * (data.shortEquityValue - data.shortEquityTarget) / data.shortEquityValue) / MULTIPLIER; 
+
+            emit debugString('Short LP Remove');
+            emit debugUint(shortLpRemove);
 
             // TODO: Redefine the lpToken var - ID needs figuring
             // extraLPBal = IERC1155(lpToken).balanceOf(address(this), 0);  
             uint extraLPBal = 0;
-
-            // Calculate the loan payback in LP units
             uint shortLpLoanPayback = 0;
+            // Calculate the loan payback in LP units
             if (data.shortLoanTarget < data.shortLoanValue) {
-                shortLpLoanPayback = (data.shortLoanValue - data.shortLoanTarget) / data.shortLoanValue;
+                shortLpLoanPayback = MULTIPLIER * (data.shortLoanValue - data.shortLoanTarget) / data.shortLoanValue / MULTIPLIER;
                 if ((shortLpRemove + extraLPBal) < shortLpLoanPayback) {
                     shortLpLoanPayback = shortLpRemove + extraLPBal;
                 }
             } 
+
+            emit debugString('Short LP Loan Payback');
+            emit debugUint(shortLpLoanPayback);
+
             // LP Remove and Loan Pay on short Pos
             reducePositionSushiswap(
                 shortPositionId, 
@@ -430,6 +490,8 @@ contract Strategy is BaseStrategy, HomoraFarmSimulator, UniswapV2Swapper {
             emit debugUint(2);
         }
 
+
+
         ///// ACTION 3 /////
         // Do another payback on the longLoanPosition if needed
         // NOTE: Maybe need to add a statement here to prevent overpaying the loan
@@ -437,7 +499,6 @@ contract Strategy is BaseStrategy, HomoraFarmSimulator, UniswapV2Swapper {
         // TODO: Redefine the lpToken var - ID needs figuring
         //uint action3LpTokenBal = IERC1155(lpToken).balanceOf(address(this), 0);
         uint action3LpTokenBal = 0;
-
         if (action3LpTokenBal > 0 && data.longLoanTarget < getBorrowETHValue(longPositionId)) {
                 reducePositionSushiswap(
                     longPositionId, 
@@ -450,6 +511,7 @@ contract Strategy is BaseStrategy, HomoraFarmSimulator, UniswapV2Swapper {
                     action3LpTokenBal // Repay in LP amounts
                 );
                 emit debugUint(3);
+                emit debugUint(action3LpTokenBal);
         }
 
         ///// ACTION 4 /////
@@ -461,6 +523,9 @@ contract Strategy is BaseStrategy, HomoraFarmSimulator, UniswapV2Swapper {
                 ethTokenAddress,
                 token0
             );
+            uint longLoanIncrease = 0;
+
+            longLoanIncrease = longLoanTakeUnits * (data.longLoanTarget - data.longLoanValue); // Token 0
             openOrIncreasePositionSushiswap(
                 longPositionId, 
                 token0,
@@ -468,11 +533,12 @@ contract Strategy is BaseStrategy, HomoraFarmSimulator, UniswapV2Swapper {
                 0, // amountToken0
                 0, // amountToken1 will be 0
                 0, // 0 LP Supplied
-                longLoanTakeUnits * (data.longLoanTarget - data.longLoanValue), // Token 0
+                longLoanIncrease,
                 0,
                 0 // Place in the Sushiswap PID
             );
             emit debugUint(4);
+            emit debugUint(longLoanIncrease);
         }
 
         ///// ACTION 5 /////
@@ -485,6 +551,7 @@ contract Strategy is BaseStrategy, HomoraFarmSimulator, UniswapV2Swapper {
                 token1
             );
 
+            uint shortLoanIncrease = shortLoanTakeUnits * (data.shortLoanTarget - data.shortLoanValue); // Token 1
             openOrIncreasePositionSushiswap(
                 shortPositionId, 
                 token0,
@@ -493,10 +560,11 @@ contract Strategy is BaseStrategy, HomoraFarmSimulator, UniswapV2Swapper {
                 0, // amountToken1 will be 0
                 0, // 0 LP Supplied
                 0,
-                shortLoanTakeUnits * (data.shortLoanTarget - data.shortLoanValue), // Token 1
+                shortLoanIncrease,
                 0 // Place in the Sushiswap PID
             );
             emit debugUint(5);
+            emit debugUint(shortLoanIncrease);
         }
 
     }
@@ -521,7 +589,7 @@ contract Strategy is BaseStrategy, HomoraFarmSimulator, UniswapV2Swapper {
             shortEquityValue,
             shortLoanValue,
             harvestValue,
-            farmLeverage
+            farmLeverage * WAD
         );
 
         uint desiredAdjustment = data.getDesiredAdjustment();

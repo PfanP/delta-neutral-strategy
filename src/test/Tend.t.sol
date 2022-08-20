@@ -14,6 +14,7 @@ import "../Token.sol";
 contract TendTest is ExtendedTest, VyperTest {
     Strategy DNStrategy;
     Token vaultToken;
+    ConcaveOracle concaveOracle;
 
     address gov = 0x0000000000000000000000000000000000000010;
     address rewards = 0x0000000000000000000000000000000000000100;
@@ -25,13 +26,13 @@ contract TendTest is ExtendedTest, VyperTest {
     address token0 = 0x6B175474E89094C44Da98b954EedeAC495271d0F; // DAI on ETH
     address token1 = 0xC02aaA39b223FE8D0A0e5C4F27eAD9083C756Cc2; // WETH on ETH
     uint farmLeverage = 3;
-    address concaveOracle = 0x0000000000000000000000000000000000000000;
     address lpToken = 0x0000000000000000000000000000000000000000;
 
     address keeper = 0x0000000000000000000000000000000000000003;
 
     function setUp() public {
         vaultToken = new Token();
+        concaveOracle = new ConcaveOracle();
 
         //string memory vaultArtifact = "artifacts/Vault.json";
         //address _vaultAddress = deployCode(vaultArtifact);
@@ -62,7 +63,7 @@ contract TendTest is ExtendedTest, VyperTest {
             token0,
             token1,
             farmLeverage,
-            concaveOracle,
+            address(concaveOracle),
             lpToken
         );
 
@@ -80,16 +81,14 @@ contract TendTest is ExtendedTest, VyperTest {
     uint _shortPositionId = 2;
 
     uint _mockHarvestAmount = 0;
-    uint _longPositionEquityETH = 1e18;
+    uint _longPositionEquityETH = 2e18;
     uint _longPositionLoanETH = 3e18;
-    uint _shortPositionEquityETH = 1e18;
+    uint _shortPositionEquityETH = 8e17;
     uint _shortPositionLoanETH = 3e18; 
     uint _longLPAmount = 2e18;
     uint _shortLPAmount = 2e18;
 
     uint _longPositionDebtToken0 = 20e18;
-    //uint _longPositionDebtToken1 = 0;
-    //uint _shortPositionDebtToken0 = 0;
     uint _shortPositionDebtToken1 = 3e18;
 
     function test_tend() public {
@@ -112,8 +111,17 @@ contract TendTest is ExtendedTest, VyperTest {
 
         // Test the Override Mode
         //DNStrategy.tend(true);
-
+        (
+            uint longLpRemove,
+            uint longLpLoanPayback,
+            uint shortLpRemove,
+            uint shortLpLoanPayback,
+            uint action3LpTokenBal,
+            uint longLoanIncrase,
+            uint shortLoanIncrease) = 
         DNStrategy.tend(false);
+
+        emit log_uint(longLpRemove);
 
     }
 
@@ -199,4 +207,24 @@ contract TendTest is ExtendedTest, VyperTest {
         strategy.tendTrigger(0);
     }
 */ 
+}
+
+
+
+contract ConcaveOracle {
+    function getETHPx(address token) external view returns (uint256) {
+        return 1000;
+    }
+
+    function getPrice(address token0, address tokenUnit)
+        external
+        view
+        returns (uint256, uint256)
+    {
+        return (1000, 1000);
+    }
+
+    function support(address token) external view returns (bool) {
+        return true;
+    }
 }

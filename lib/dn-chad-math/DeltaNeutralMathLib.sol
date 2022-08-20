@@ -114,43 +114,28 @@ library DeltaNeutralMathLib {
         DeltaNeutralMetadata memory data,
         uint256 desiredAdjustment
     ) internal pure returns (uint256 longEquityTarget) {
-        return data.longEquityValue < desiredAdjustment ?
-            (desiredAdjustment - data.longEquityValue): 
-        (data.longEquityValue - desiredAdjustment);
+        return desiredAdjustment;
     }
 
     function shortEquityRebalanceTarget(
         DeltaNeutralMetadata memory data,
         uint256 desiredAdjustment
     ) internal pure returns (uint256 shortEquityTarget) {
-        uint256 adjustmentTimesLeverage = desiredAdjustment.mulWad(data.leverageValue);
-
-        return data.shortEquityValue < adjustmentTimesLeverage ?
-            (adjustmentTimesLeverage - data.shortEquityValue): 
-        (data.shortEquityValue - adjustmentTimesLeverage);
+        return desiredAdjustment.mulWad(data.leverageValue);
     }
 
     function shortLoanRebalanceTarget(
         DeltaNeutralMetadata memory data,
         uint256 desiredAdjustment
     ) internal pure returns (uint256 shortLoanTarget) {
-        uint256 leverageValueSquared = data.leverageValue.mulWad(data.leverageValue);
-        uint256 adjustmentTimesLeverageSquared = desiredAdjustment.mulWad(leverageValueSquared);
-
-        return data.shortLoanValue < adjustmentTimesLeverageSquared ?
-            (adjustmentTimesLeverageSquared - data.shortLoanValue): 
-            (data.shortLoanValue - adjustmentTimesLeverageSquared);
+        return desiredAdjustment.mulWad(data.leverageValue.mulWad(data.leverageValue));
     }
 
     function longLoanRebalanceTarget(
         DeltaNeutralMetadata memory data,
         uint256 desiredAdjustment
     ) internal pure returns (uint256 longLoanTarget) {
-        uint256 adjustmentTimesLeverage = desiredAdjustment.mulWad(data.leverageValue);
-
-        return data.longLoanValue < adjustmentTimesLeverage ?
-            (adjustmentTimesLeverage - data.longLoanValue): 
-        (data.longLoanValue - adjustmentTimesLeverage);
+        return desiredAdjustment.mulWad(data.leverageValue);
     }
 
 }
