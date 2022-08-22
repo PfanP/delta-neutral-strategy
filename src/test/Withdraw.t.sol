@@ -178,7 +178,7 @@ contract WithdrawTest is ExtendedTest, VyperTest {
     //uint _shortPositionDebtToken0 = 0;
     uint256 _shortPositionDebtToken1 = 3e18;
 
-    function test_withdraw() public {
+    function test_withdraw_from_not_vault() public {
         DNStrategy.setShortPositionId(_shortPositionId);
         DNStrategy.setLongPositionId(_longPositionId);
 
@@ -197,6 +197,28 @@ contract WithdrawTest is ExtendedTest, VyperTest {
         );
 
         uint256 amountNeeded = 1 ether;
+        vm.expectRevert("!vault");
+        DNStrategy.withdraw(amountNeeded);
+    }
+
+    function test_withdraw() public {
+        DNStrategy.setShortPositionId(_shortPositionId);
+        DNStrategy.setLongPositionId(_longPositionId);
+
+        DNStrategy.initialize_farmSimulator(
+            _mockHarvestAmount,
+            _longPositionEquityETH,
+            _longPositionLoanETH,
+            _shortPositionEquityETH,
+            _shortPositionLoanETH,
+            _longLPAmount,
+            _shortLPAmount,
+            _longPositionDebtToken0,
+            _shortPositionDebtToken1,
+            _longPositionId,
+            _shortPositionId
+        );
+
         vault.withdraw();
     }
 
