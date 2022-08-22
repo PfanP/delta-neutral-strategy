@@ -62,7 +62,6 @@ contract Strategy is BaseStrategy, HomoraFarmHandler, UniswapV2Swapper {
         address _homoraBank,
         address _sushiSwapSpell,
         address _uniswapV2Router,
-        address _token0,
         address _token1,
         uint _farmLeverage,
         address _concaveOracle,
@@ -77,7 +76,7 @@ contract Strategy is BaseStrategy, HomoraFarmHandler, UniswapV2Swapper {
         // profitFactor = 100;
         // debtThreshold = 0;
 
-        token0 = _token0;
+        token0 = vault.token(); // Token 0 is always the want token
         token1 = _token1;
         farmLeverage = _farmLeverage;
         longPositionId = 0;
@@ -586,8 +585,8 @@ contract Strategy is BaseStrategy, HomoraFarmHandler, UniswapV2Swapper {
 
 
         (uint wantTokenUnits,) = IConcaveOracle(concaveOracle).getPrice(
-            ethTokenAddress,
-            address(want)
+            address(want),
+            ethTokenAddress
         );
         uint256 harvestValue = (want.balanceOf(address(this))) * wantTokenUnits;
 

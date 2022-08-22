@@ -70,7 +70,6 @@ contract TendTest is ExtendedTest, VyperTest {
             hBankAddress,
             sushiSwapSpell,
             router,
-            token0,
             token1,
             farmLeverage,
             address(concaveOracle),
@@ -247,7 +246,7 @@ contract ConcaveOracle {
         view
         returns (uint256, uint256)
     {
-        return (1000, 1000);
+        return (1000, 0); 
     }
 
     function support(address token) external view returns (bool) {

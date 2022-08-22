@@ -163,7 +163,6 @@ contract StrategyFixture is ExtendedTest {
             homoraBank,
             sushiSwapSpell,
             sushiswapRouter,
-            token0,
             token1,
             farmLeverage,
             concaveOracle,
