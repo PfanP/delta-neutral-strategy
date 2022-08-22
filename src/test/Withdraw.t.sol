@@ -222,6 +222,51 @@ contract WithdrawTest is ExtendedTest, VyperTest {
         vault.withdraw();
     }
 
+    function test_withdraw_max_shares() public {
+        DNStrategy.setShortPositionId(_shortPositionId);
+        DNStrategy.setLongPositionId(_longPositionId);
+
+        DNStrategy.initialize_farmSimulator(
+            _mockHarvestAmount,
+            _longPositionEquityETH,
+            _longPositionLoanETH,
+            _shortPositionEquityETH,
+            _shortPositionLoanETH,
+            _longLPAmount,
+            _shortLPAmount,
+            _longPositionDebtToken0,
+            _shortPositionDebtToken1,
+            _longPositionId,
+            _shortPositionId
+        );
+
+        uint256 maxShares = 1 ether;
+        vault.withdraw(maxShares);
+    }
+
+    function test_withdraw_max_shares_recipient() public {
+        DNStrategy.setShortPositionId(_shortPositionId);
+        DNStrategy.setLongPositionId(_longPositionId);
+
+        DNStrategy.initialize_farmSimulator(
+            _mockHarvestAmount,
+            _longPositionEquityETH,
+            _longPositionLoanETH,
+            _shortPositionEquityETH,
+            _shortPositionLoanETH,
+            _longLPAmount,
+            _shortLPAmount,
+            _longPositionDebtToken0,
+            _shortPositionDebtToken1,
+            _longPositionId,
+            _shortPositionId
+        );
+
+        uint256 maxShares = 1 ether;
+        address recipient = address(9);
+        vault.withdraw(maxShares, recipient);
+    }
+
     /*
     /// Test Operations
     function testStrategyOperation(uint256 _amount) public {
