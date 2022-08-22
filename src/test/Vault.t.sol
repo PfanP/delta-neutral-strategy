@@ -54,7 +54,7 @@ contract VaultTest is Test {
         //emit log_uint(vaultBal);
     }
 
-/*
+
     function test_deposit() public {
         vm.prank(governance);
         vault.setDepositLimit(90000e18);
@@ -75,7 +75,7 @@ contract VaultTest is Test {
         uint value = vault.withdraw(maxShares, msg.sender, maxLoss);
         emit log_uint(value);
     }
-*/
+
 
 /*
     function test_setName() public {

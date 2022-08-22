@@ -57,7 +57,10 @@ contract TendTest is ExtendedTest, VyperTest {
             //_guardian,
             //_management
         );
+        vm.prank(governance);
+        vault.setDepositLimit(90000e18);
 
+        
         DNStrategy = new Strategy(
             address(vault),
             hBankAddress,
@@ -105,23 +108,14 @@ contract TendTest is ExtendedTest, VyperTest {
     uint _longPositionDebtToken0 = 20e18;
     uint _shortPositionDebtToken1 = 3e18;
 
+    function test_openPosition() public {
+        
+    }
+
+
     function test_tend() public {
         DNStrategy.setShortPositionId(_shortPositionId);
         DNStrategy.setLongPositionId(_longPositionId);
-
-        DNStrategy.initialize_farmSimulator(
-            _mockHarvestAmount, 
-            _longPositionEquityETH, 
-            _longPositionLoanETH, 
-            _shortPositionEquityETH, 
-            _shortPositionLoanETH, 
-            _longLPAmount, 
-            _shortLPAmount,
-            _longPositionDebtToken0,
-            _shortPositionDebtToken1,
-            _longPositionId,
-            _shortPositionId
-        );
 
         // Test the Override Mode
         //DNStrategy.tend(true);

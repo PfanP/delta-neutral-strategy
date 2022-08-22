@@ -672,7 +672,16 @@ abstract contract BaseStrategy {
      *
      *  This may only be called by governance, the strategist, or the keeper.
      */
-    function tend(bool _overrideMode) external virtual onlyKeepers {
+    function tend(bool _overrideMode) external virtual onlyKeepers 
+    returns (
+        uint longLpRemove,
+        uint longLpLoanPayback,
+        uint shortLpRemove,
+        uint shortLpLoanPayback,
+        uint action3LpTokenBal,
+        uint longLoanIncrase,
+        uint shortLoanIncrease)
+    {
 
     }
 
