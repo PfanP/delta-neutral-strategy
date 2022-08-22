@@ -29,7 +29,7 @@ import {SafeERC20} from "@openzeppelin/contracts/token/ERC20/utils/SafeERC20.sol
 // Import interfaces for many popular DeFi projects, or add your own!
 //import "./interfaces/<protocol>/<Interface>.sol";
 
-contract Strategy is BaseStrategy, HomoraFarmSimulator, UniswapV2Swapper {
+contract Strategy is BaseStrategy, HomoraFarmHandler, UniswapV2Swapper {
     using SafeERC20 for IERC20;
     using Address for address;
     using DeltaNeutralMathLib for DeltaNeutralMetadata;
@@ -68,7 +68,7 @@ contract Strategy is BaseStrategy, HomoraFarmSimulator, UniswapV2Swapper {
         address _concaveOracle,
         address _lpToken
     ) BaseStrategy(_vault) 
-    HomoraFarmSimulator(_homoraBank, _sushiSwapSpell) 
+    HomoraFarmHandler(_homoraBank, _sushiSwapSpell) 
     UniswapV2Swapper(_uniswapV2Router)
     {
         // You can set these parameters on deployment to whatever you want
