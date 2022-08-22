@@ -132,7 +132,7 @@ contract SushiBaseStrategyTest is ExtendedTest {
         address _token0,
         address _token1
     ) public returns (address) {
-        Strategy _strategy = new Strategy(_vault, _pid, _token0, _token1);
+        Strategy _strategy = new Strategy(_vault, _token0, _token1, _pid);
         return address(_strategy);
     }
 
@@ -210,7 +210,7 @@ contract SushiBaseStrategyTest is ExtendedTest {
 
         // tend
         vm.prank(strategist);
-        strategy.tend();
+        strategy.tend(false);
 
         vm.prank(wethWhale);
         vault.withdraw();
