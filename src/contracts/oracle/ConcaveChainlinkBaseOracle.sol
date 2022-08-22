@@ -84,6 +84,23 @@ contract ConcaveChainlinkBaseOracle is IBaseOracle, Governable {
         return ChainlinkDetailedERC20(_token).decimals();
     }
 
+    event SpecificDecimalsSet(address indexed token, uint8 decimals);
+    event MaxDelayTimesSet(address indexed token, uint maxDelayTime);
+
     //////////// Governable ////////////
-    // TODO
+    function setSpecificDecimals(address[] calldata _tokens, uint8[] calldata _decimals) external onlyGov {
+        require(_tokens.length == _decimals.length, "length mismatch");
+        for (uint idx = 0; idx < _tokens.length; idx++) {
+            specificDecimals[_tokens[idx]] = _decimals[idx];
+            emit SpecificDecimalsSet(_tokens[idx], _decimals[idx]);
+        }
+    }
+
+    function setMaxDelayTimes(address[] calldata _tokens, uint[] calldata _maxDelayTimes) external onlyGov {
+        require(_tokens.length == _maxDelayTimes.length, "length mismatch");
+        for (uint idx = 0; idx < _tokens.length; idx++) {
+            maxDelayTimes[_tokens[idx]] = _maxDelayTimes[idx];
+            emit MaxDelayTimesSet(_tokens[idx], _maxDelayTimes[idx]);
+        }
+    }
 }
