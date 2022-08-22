@@ -20,6 +20,30 @@ contract ConcaveChainlinkBaseOracleTest is Test {
 
     function setUp() public {
         oracle = new ConcaveChainlinkBaseOracle(registryAddress);
+        // tokens array
+        address[] memory tokens = new address[](4);
+        tokens[0] = USDT;
+        tokens[1] = USDC;
+        tokens[2] = DAI;
+        tokens[3] = WETH;
+        // decimals arra
+        uint8[] memory decimals = new uint8[](4);
+        decimals[0] = 6;
+        decimals[1] = 6;
+        decimals[2] = 18;
+        decimals[3] = 18;
+        // max delay times array
+        uint[] memory maxDelayTimes = new uint[](4);
+        maxDelayTimes[0] = 8 * 3600;
+        maxDelayTimes[1] = 8 * 3600;
+        maxDelayTimes[2] = 8 * 3600;
+        maxDelayTimes[3] = 8 * 3600;
+        oracle.setSpecificDecimals(tokens, decimals);
+        oracle.setMaxDelayTimes(tokens, maxDelayTimes);
+    }
+
+    function test_blockTimestamp() public {
+        emit log_uint(block.timestamp);
     }
 
     function test_sample() public {

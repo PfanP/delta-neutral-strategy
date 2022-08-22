@@ -29,6 +29,7 @@ contract ConcaveChainlinkBaseOracle is IBaseOracle, Governable {
 
     // store decimals for each token
     mapping(address => uint8) public specificDecimals;
+    mapping(address => uint) public maxDelayTimes; // Mapping from token address to max delay time
 
     /**
      * Network: Ethereum Mainnet
@@ -49,6 +50,7 @@ contract ConcaveChainlinkBaseOracle is IBaseOracle, Governable {
         }
         // get decimals for token, if there is no decimals, get default 18
         uint8 decimal = getDecimals(_token);
+        uint maxDelayTime = maxDelayTimes[_token];
         try registry.latestRoundData(_token, ETH) returns (
             uint80,
             int256 answer,
@@ -56,27 +58,21 @@ contract ConcaveChainlinkBaseOracle is IBaseOracle, Governable {
             uint256 updatedAt,
             uint80
         ) {
-            // todo need to check the delay time
-
-            // todo need to store the decimals in a variable to avoid the need for a [DONE]
-            // dynamic memory allocation
+            require(updatedAt >= block.timestamp.sub(maxDelayTime), 'delayed update time');
             return answer.toUint256().mul(2 << 111).div(10**decimal);
-            // return answer.toUint256().mul(2**112).div(10**decimals);
         } catch {
-            // todo what to do if there is no data for the token-eth pair?
+            (, int answer, , uint updatedAt, ) = registry.latestRoundData(_token, USD);
+            require(updatedAt >= block.timestamp.sub(maxDelayTime), 'delayed update time');
+            (, int ethAnswer, , uint ethUpdatedAt, ) = registry.latestRoundData(ETH, USD);
+            require(ethUpdatedAt >= block.timestamp.sub(maxDelayTimes[ETH]), 'delayed eth-usd update time');
+            if (decimal > 18) {
+                // if decimal is greater than 18, the answer's decimals are greater than ETH's decimals, so we need to divide the answer by 10**(decimal - 18)
+                return answer.toUint256().mul(2 << 111).div(ethAnswer.toUint256()).div(10**(decimal - 18));
+            } else {
+                // if decimal is less or equal than 18 (mostly are 18), the answer's decimals are less or equal than ETH's decimals, so we need to multiply the answer by 10**(18 - decimal)
+                return answer.toUint256().mul(2 << 111).mul(10**(18 - decimal)).div(ethAnswer.toUint256());
+            }
         }
-
-        return 0;
-    }
-
-    /// @dev Return the price of token0/token1, multiplied by 1e18
-    /// @return The price of token0/token1, and the time timstamp
-    function getPrice(address token0, address tokenUnit)
-        external
-        view
-        returns (uint256, uint256)
-    {
-        return (0, 0);
     }
 
     /// @dev Return get decimals for token, if there is no decimals, get decimals from ChainlinkDetailedERC20
@@ -86,5 +82,25 @@ contract ConcaveChainlinkBaseOracle is IBaseOracle, Governable {
             return decimals;
         }
         return ChainlinkDetailedERC20(_token).decimals();
+    }
+
+    event SpecificDecimalsSet(address indexed token, uint8 decimals);
+    event MaxDelayTimesSet(address indexed token, uint maxDelayTime);
+
+    //////////// Governable ////////////
+    function setSpecificDecimals(address[] calldata _tokens, uint8[] calldata _decimals) external onlyGov {
+        require(_tokens.length == _decimals.length, "length mismatch");
+        for (uint idx = 0; idx < _tokens.length; idx++) {
+            specificDecimals[_tokens[idx]] = _decimals[idx];
+            emit SpecificDecimalsSet(_tokens[idx], _decimals[idx]);
+        }
+    }
+
+    function setMaxDelayTimes(address[] calldata _tokens, uint[] calldata _maxDelayTimes) external onlyGov {
+        require(_tokens.length == _maxDelayTimes.length, "length mismatch");
+        for (uint idx = 0; idx < _tokens.length; idx++) {
+            maxDelayTimes[_tokens[idx]] = _maxDelayTimes[idx];
+            emit MaxDelayTimesSet(_tokens[idx], _maxDelayTimes[idx]);
+        }
     }
 }
