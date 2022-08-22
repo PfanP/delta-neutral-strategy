@@ -171,13 +171,12 @@ contract Strategy is BaseStrategy {
                 _toWithdraw = deposited;
             }
 
-            MASTERCHEF.withdraw(pid, _toWithdraw);
             if (deposited > 0) {
                 MASTERCHEF.withdraw(pid, _toWithdraw);
             }
             // Note: Withdrawl process will earn rewards, this will be deposited into SushiBar on next adjustPositions()
-            _liquidatedAmount = _preWant;
-            _loss = _amountNeeded - _preWant;
+            _liquidatedAmount = want.balanceOf(address(this));
+            _loss = _amountNeeded - _liquidatedAmount;
         } else {
             _liquidatedAmount = _amountNeeded;
         }
