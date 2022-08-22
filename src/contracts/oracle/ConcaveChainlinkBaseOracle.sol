@@ -38,7 +38,7 @@ contract ConcaveChainlinkBaseOracle is IBaseOracle, Governable {
      * Network: Kovan
      * Feed Registry: 0xAa7F6f7f507457a1EE157fE97F6c7DB2BEec5cD0
      */
-    constructor(address _registry) public {
+    constructor(address _registry) {
         __Governable__init();
         registry = FeedRegistryInterface(_registry);
     }
