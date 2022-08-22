@@ -6,6 +6,7 @@ import "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 import "@openzeppelin/contracts/token/ERC20/utils/SafeERC20.sol";
 import "@openzeppelin/contracts/utils/math/SafeMath.sol";
 
+
 struct StrategyParams {
     uint256 performanceFee;
     uint256 activation;
@@ -195,6 +196,10 @@ abstract contract BaseStrategy {
     // health checks
     bool public doHealthCheck;
     address public healthCheck;
+
+    // DEBUG EVENTS
+    event debugString(string str);
+    event debugUint(uint256 emitUint);
 
     /**
      * @notice
@@ -783,6 +788,9 @@ abstract contract BaseStrategy {
         uint256 loss = 0;
         uint256 debtOutstanding = vault.debtOutstanding();
         uint256 debtPayment = 0;
+
+        emit debugString('Harvest 1');
+
         if (emergencyExit) {
             // Free up as much capital as possible
             uint256 amountFreed = liquidateAllPositions();
@@ -793,8 +801,11 @@ abstract contract BaseStrategy {
             }
             debtPayment = debtOutstanding.sub(loss);
         } else {
+            emit debugString('Harvest 2');
             // Free up returns for Vault to pull
-            (profit, loss, debtPayment) = prepareReturn(debtOutstanding);
+
+                (profit, loss, debtPayment) = prepareReturn(debtOutstanding);
+            emit debugString('Harvest 3');
         }
 
         // Allow Vault to take up to the "harvested" balance of this contract,
@@ -802,9 +813,12 @@ abstract contract BaseStrategy {
         // the Vault.
         uint256 totalDebt = vault.strategies(address(this)).totalDebt;
         debtOutstanding = vault.report(profit, loss, debtPayment);
+        emit debugString('Harvest 4');
+        emit debugUint(want.balanceOf(address(this)));
 
         // Check if free returns are left, and re-invest them
         adjustPosition(debtOutstanding);
+        emit debugString('Harvest 5');
 
         // call healthCheck contract
         if (doHealthCheck && healthCheck != address(0)) {
@@ -813,6 +827,7 @@ abstract contract BaseStrategy {
             emit SetDoHealthCheck(true);
             doHealthCheck = true;
         }
+        emit debugString('Harvest 6');
 
         emit Harvested(profit, loss, debtPayment, debtOutstanding);
     }
