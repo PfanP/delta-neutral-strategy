@@ -542,7 +542,7 @@ contract Strategy is BaseStrategy, HomoraFarmHandler, UniswapV2Swapper {
                 0, // 0 LP Supplied
                 longLoanIncrease,
                 0,
-                0 // Place in the Sushiswap PID
+                pid // Place in the Sushiswap PID
             );
             emit debugUint(4);
             emit debugUint(longLoanIncrease);
@@ -568,7 +568,7 @@ contract Strategy is BaseStrategy, HomoraFarmHandler, UniswapV2Swapper {
                 0, // 0 LP Supplied
                 0,
                 shortLoanIncrease,
-                0 // Place in the Sushiswap PID
+                pid
             );
             emit debugUint(5);
             emit debugUint(shortLoanIncrease);
@@ -588,7 +588,7 @@ contract Strategy is BaseStrategy, HomoraFarmHandler, UniswapV2Swapper {
             address(want),
             ethTokenAddress
         );
-        uint256 harvestValue = (want.balanceOf(address(this))) * wantTokenUnits;
+        uint256 harvestValue = (want.balanceOf(address(this))) * wantTokenUnits / WAD;
 
         DeltaNeutralMetadata memory data = DeltaNeutralMetadata(
             longEquityValue,
@@ -614,9 +614,13 @@ contract Strategy is BaseStrategy, HomoraFarmHandler, UniswapV2Swapper {
             ethTokenAddress,
             token1
         );
+        
+        emit debugString('Long Equity Add & Long Loan Add BEFORE WAD');
+        emit debugUint(longEquityAdd);
+        emit debugUint(longLoanAdd);
 
-        longEquityAdd = longEquityAdd * token0Units;
-        longLoanAdd = longLoanAdd * token0Units;
+        longEquityAdd = (longEquityAdd * token0Units) / WAD;
+        longLoanAdd = (longLoanAdd * token0Units) / WAD;
         // Call Add Position
         // Position Long
 
@@ -633,13 +637,13 @@ contract Strategy is BaseStrategy, HomoraFarmHandler, UniswapV2Swapper {
                 0, // 0 LP Supplied
                 longLoanAdd,
                 0, // 0 Borrrow of token1
-                0 // Place in the Sushiswap PID
+                pid
         );
         // Rebalancing: Say Eth price goes up
         // This farm is underlevereaged now
 
-        shortEquityAdd = shortEquityAdd * token0Units;
-        shortLoadAdd = shortLoadAdd * token1Units;
+        shortEquityAdd = shortEquityAdd * token0Units / WAD;
+        shortLoadAdd = shortLoadAdd * token1Units / WAD;
         // Position Two
 
         emit debugString('Short Equity Add & Long Loan Add');
@@ -655,7 +659,7 @@ contract Strategy is BaseStrategy, HomoraFarmHandler, UniswapV2Swapper {
                 0, // 0 Supply of LP
                 0, // 0 Borrow of token0
                 shortLoadAdd,
-                0 // Place in the Sushiswap PID
+                pid 
         );
 
         // Update the position IDs if opening new DN positions

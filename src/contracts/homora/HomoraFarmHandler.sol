@@ -64,19 +64,9 @@ abstract contract HomoraFarmHandler {
     ) public returns (uint256) {
         if (supplyToken0 > 0) {
             IERC20(token0).approve(homoraBank, supplyToken0);
-            IERC20(token0).transferFrom(
-                msg.sender,
-                address(this),
-                supplyToken0
-            );
         }
         if (supplyToken1 > 0) {
             IERC20(token1).approve(homoraBank, supplyToken1);
-            IERC20(token1).transferFrom(
-                msg.sender,
-                address(this),
-                supplyToken1
-            );
         }
 
         Amounts memory amtData = Amounts(
