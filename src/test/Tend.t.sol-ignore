@@ -110,19 +110,19 @@ contract TendTest is ExtendedTest, VyperTest {
         DNStrategy.setShortPositionId(_shortPositionId);
         DNStrategy.setLongPositionId(_longPositionId);
 
-        DNStrategy.initialize_farmSimulator(
-            _mockHarvestAmount, 
-            _longPositionEquityETH, 
-            _longPositionLoanETH, 
-            _shortPositionEquityETH, 
-            _shortPositionLoanETH, 
-            _longLPAmount, 
-            _shortLPAmount,
-            _longPositionDebtToken0,
-            _shortPositionDebtToken1,
-            _longPositionId,
-            _shortPositionId
-        );
+        // DNStrategy.initialize_farmSimulator(
+        //     _mockHarvestAmount, 
+        //     _longPositionEquityETH, 
+        //     _longPositionLoanETH, 
+        //     _shortPositionEquityETH, 
+        //     _shortPositionLoanETH, 
+        //     _longLPAmount, 
+        //     _shortLPAmount,
+        //     _longPositionDebtToken0,
+        //     _shortPositionDebtToken1,
+        //     _longPositionId,
+        //     _shortPositionId
+        // );
 
         // Test the Override Mode
         //DNStrategy.tend(true);
