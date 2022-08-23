@@ -2,6 +2,7 @@ pragma solidity >=0.8.13;
 
 import "../../lib/forge-std/src/Test.sol";
 import "../contracts/oracle/ConcaveOracle.sol";
+import "../contracts/oracle/ConcaveChainlinkBaseOracle.sol";
 import "../interfaces/oracle/IBaseOracle.sol";
 import "../../lib/dn-chad-math/DopeAssMathLib.sol";
 
@@ -15,6 +16,7 @@ contract OracleTest is Test {
     // oracle sources
     address public constant aggregatorSource =
         0x636478DcecA0308ec6b39e3ab1e6b9EBF00Cd01c;
+    address constant registryAddress = 0x47Fb2585D2C56Fe188D0E6ec628a38b74fCeeeDf;
 
     ConcaveOracle oracle;
 
@@ -34,21 +36,43 @@ contract OracleTest is Test {
 
         // define deviation array
         uint256[] memory deviations = new uint256[](4);
-        deviations[0] = 1e18;
-        deviations[1] = 1e18;
-        deviations[2] = 1e18;
-        deviations[3] = 1e18;
+        deviations[0] = 1.5e18;
+        deviations[1] = 1.5e18;
+        deviations[2] = 1.5e18;
+        deviations[3] = 1.5e18;
 
         // define oracles array
         IBaseOracle[][] memory oracles = new IBaseOracle[][](4);
-        oracles[0] = new IBaseOracle[](1);
+        oracles[0] = new IBaseOracle[](2);
         oracles[0][0] = IBaseOracle(aggregatorSource);
-        oracles[1] = new IBaseOracle[](1);
+        oracles[1] = new IBaseOracle[](2);
         oracles[1][0] = IBaseOracle(aggregatorSource);
-        oracles[2] = new IBaseOracle[](1);
+        oracles[2] = new IBaseOracle[](2);
         oracles[2][0] = IBaseOracle(aggregatorSource);
-        oracles[3] = new IBaseOracle[](1);
+        oracles[3] = new IBaseOracle[](2);
         oracles[3][0] = IBaseOracle(aggregatorSource);
+
+        ConcaveChainlinkBaseOracle chainlinkSource = new ConcaveChainlinkBaseOracle(registryAddress);
+        // decimals arra
+        uint8[] memory decimals = new uint8[](4);
+        decimals[0] = 18;
+        decimals[1] = 18;
+        decimals[2] = 6;
+        decimals[3] = 6;
+        // max delay times array
+        uint[] memory maxDelayTimes = new uint[](4);
+        maxDelayTimes[0] = 8 * 3600;
+        maxDelayTimes[1] = 8 * 3600;
+        maxDelayTimes[2] = 8 * 3600;
+        maxDelayTimes[3] = 8 * 3600;
+        chainlinkSource.setSpecificDecimals(tokens, decimals);
+        chainlinkSource.setMaxDelayTimes(tokens, maxDelayTimes);
+
+        oracles[0][1] = IBaseOracle(chainlinkSource);
+        oracles[1][1] = IBaseOracle(chainlinkSource);
+        oracles[2][1] = IBaseOracle(chainlinkSource);
+        oracles[3][1] = IBaseOracle(chainlinkSource);
+
         oracle.addPrimarySource(tokens, deviations, oracles);
     }
 
