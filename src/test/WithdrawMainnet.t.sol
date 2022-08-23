@@ -1,6 +1,6 @@
 // SPDX-License-Identifier: AGPL-3.0
 pragma solidity ^0.8.12;
-import "../../lib/forge-std/src/console.sol";
+import {console} from "forge-std/console.sol";
 
 //import {StrategyParams} from "../interfaces/IVault.sol";
 
@@ -16,6 +16,7 @@ contract WithdrawTest is ExtendedTest, VyperTest {
     Strategy DNStrategy;
     Token vaultToken;
     ConcaveOracle concaveOracle;
+    IERC20 dai;
 
     address gov = 0xe142BAe2338D2c691C267B054b13d38Ce6aC5442;
     address rewards = 0x0000000000000000000000000000000000000100; // Any wallet will do
@@ -27,6 +28,8 @@ contract WithdrawTest is ExtendedTest, VyperTest {
     address token1 = 0xC02aaA39b223FE8D0A0e5C4F27eAD9083C756Cc2; // WETH on ETH
     uint farmLeverage = 3;
     address lpToken = 0xC3D03e4F041Fd4cD388c549Ee2A29a9E5075882f; // DAI<>WETh LP on SushiSwap
+    address daiWhale = 0x5d3a536E4D6DbD6114cc1Ead35777bAB948E3643;
+    address mainnetDAI = 0x6B175474E89094C44Da98b954EedeAC495271d0F;
 
     address keeper = 0x0000000000000000000000000000000000000003; // Our Bot keeper address
 
@@ -36,6 +39,7 @@ contract WithdrawTest is ExtendedTest, VyperTest {
 
         address hBankAddress = 0xba5eBAf3fc1Fcca67147050Bf80462393814E54B;
         IHomoraBank hBank = IHomoraBank(hBankAddress);
+        dai = IERC20(mainnetDAI);
 
         string memory vaultArtifact = "artifacts/Vault.json";
         address _vaultAddress = deployCode(vaultArtifact);
@@ -50,7 +54,7 @@ contract WithdrawTest is ExtendedTest, VyperTest {
         string memory _symbol = 'vCNV';
         vault.initialize(
             address(vaultToken),
-            address(this),
+            gov,
             rewards,
             _name,
             _symbol//,
@@ -59,7 +63,6 @@ contract WithdrawTest is ExtendedTest, VyperTest {
         );
         vm.prank(gov);
         vault.setDepositLimit(90000e18);
-
         
         DNStrategy = new Strategy(
             address(vault),
@@ -72,6 +75,8 @@ contract WithdrawTest is ExtendedTest, VyperTest {
             address(concaveOracle),
             lpToken
         );
+
+        vm.prank(gov);
 
         vault.addStrategy(
             address(DNStrategy), 
@@ -92,7 +97,18 @@ contract WithdrawTest is ExtendedTest, VyperTest {
         vm.prank(gov);
         hBank.setWhitelistUsers(users, userStatus);
 
+        // Deposit token to vault
+        uint amount = 1000 ether;
+        vm.startPrank(daiWhale);
+        dai.approve(address(vault), type(uint256).max);
+        vault.deposit(amount);
+        vm.stopPrank();
+
+        emit log_uint(dai.balanceOf(address(vault)));
+        // Get the tokens into the strategy 
+        DNStrategy.harvest(); 
     }
+
 
     uint _longPositionId = 1;
     uint _shortPositionId = 2;
@@ -108,31 +124,9 @@ contract WithdrawTest is ExtendedTest, VyperTest {
     uint _longPositionDebtToken0 = 20e18;
     uint _shortPositionDebtToken1 = 3e18;
 
-    function test_openPosition() public {
+    function test_withdraw() public {
         
     }
-
-
-    function test_tend() public {
-        DNStrategy.setShortPositionId(_shortPositionId);
-        DNStrategy.setLongPositionId(_longPositionId);
-
-        // Test the Override Mode
-        //DNStrategy.tend(true);
-        (
-            uint longLpRemove,
-            uint longLpLoanPayback,
-            uint shortLpRemove,
-            uint shortLpLoanPayback,
-            uint action3LpTokenBal,
-            uint longLoanIncrase,
-            uint shortLoanIncrease) = 
-        DNStrategy.tend(false);
-
-        emit log_uint(longLpRemove);
-
-    }
-
 
 
 /*
