@@ -29,11 +29,11 @@ contract TendTest is ExtendedTest, VyperTest {
     address token0 = 0x6B175474E89094C44Da98b954EedeAC495271d0F; // DAI on ETH
     address token1 = 0xC02aaA39b223FE8D0A0e5C4F27eAD9083C756Cc2; // WETH on ETH
     uint farmLeverage = 3;
-    address lpToken = 0xA2caEa05fF7B98f10Ad5ddc837F15905f33FEb60; // DAI<>WETh LP on SushiSwap | OR MAYBE this is the WMasterChef
+    address lpToken = 0xC3D03e4F041Fd4cD388c549Ee2A29a9E5075882f; // DAI<>WETh LP on SushiSwap | OR MAYBE this is the WMasterChef
 
     address keeper = 0x0000000000000000000000000000000000000003; // Our Bot keeper address
     address mainnetDAI = 0x6B175474E89094C44Da98b954EedeAC495271d0F;
-    uint pid = 0; 
+    uint pid = 2; 
     address daiWhale = 0x5d3a536E4D6DbD6114cc1Ead35777bAB948E3643;
 
     function setUp() public {
@@ -238,7 +238,7 @@ contract TendTest is ExtendedTest, VyperTest {
 
 contract ConcaveOracle {
     function getETHPx(address token) external view returns (uint256) {
-        return 1000;
+        return 1e18;
     }
 
     function getPrice(address token0, address tokenUnit)
@@ -246,7 +246,7 @@ contract ConcaveOracle {
         view
         returns (uint256, uint256)
     {
-        return (1000, 0); 
+        return (1e18, 0); 
     }
 
     function support(address token) external view returns (bool) {
