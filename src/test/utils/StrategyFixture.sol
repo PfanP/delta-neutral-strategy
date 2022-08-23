@@ -46,6 +46,7 @@ contract StrategyFixture is ExtendedTest {
     address public management = address(5);
     address public strategist = address(6);
     address public keeper = address(7);
+    uint public pid = 0;
 
     uint256 public minFuzzAmt;
     // @dev maximum amount of want tokens deposited based on @maxDollarNotional
@@ -162,11 +163,11 @@ contract StrategyFixture is ExtendedTest {
             homoraBank,
             sushiSwapSpell,
             sushiswapRouter,
-            token0,
             token1,
             farmLeverage,
             concaveOracle,
-            lpToken
+            lpToken,
+            pid
         );
 
         return address(_strategy);

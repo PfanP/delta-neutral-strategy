@@ -1019,18 +1019,19 @@ def _reportLoss(strategy: address, loss: uint256):
     assert totalDebt >= loss
 
     # Also, make sure we reduce our trust with the strategy by the amount of loss
-    if self.debtRatio != 0: # if vault with single strategy that is set to EmergencyOne
+    #if self.debtRatio != 0: # if vault with single strategy that is set to EmergencyOne
         # NOTE: The context to this calculation is different than the calculation in `_reportLoss`,
         # this calculation intentionally approximates via `totalDebt` to avoid manipulatable results
-        ratio_change: uint256 = min(
+    #    ratio_change: uint256 = min(
             # NOTE: This calculation isn't 100% precise, the adjustment is ~10%-20% more severe due to EVM math
-            loss * self.debtRatio / self.totalDebt,
-            self.strategies[strategy].debtRatio,
-        )
+    #        loss * self.debtRatio / self.totalDebt,
+    #        self.strategies[strategy].debtRatio,
+    #    )
         # If the loss is too small, ratio_change will be 0
-        if ratio_change != 0:
-            self.strategies[strategy].debtRatio -= ratio_change
-            self.debtRatio -= ratio_change
+    #    if ratio_change != 0:
+    #        self.strategies[strategy].debtRatio -= ratio_change
+    #        self.debtRatio -= ratio_change
+    
     # Finally, adjust our strategy's parameters by the loss
     self.strategies[strategy].totalLoss += loss
     self.strategies[strategy].totalDebt = totalDebt - loss
@@ -1762,7 +1763,7 @@ def report(gain: uint256, loss: uint256, _debtPayment: uint256) -> uint256:
             HealthCheck(self.healthCheck).enableCheck(strategy)
 
     # No lying about total available to withdraw!
-    assert self.token.balanceOf(msg.sender) >= gain + _debtPayment
+    #assert self.token.balanceOf(msg.sender) >= gain + _debtPayment
 
     # We have a loss to report, do it before the rest of the calculations
     if loss > 0:
@@ -1776,6 +1777,8 @@ def report(gain: uint256, loss: uint256, _debtPayment: uint256) -> uint256:
 
     # Compute the line of credit the Vault is able to offer the Strategy (if any)
     credit: uint256 = self._creditAvailable(msg.sender)
+
+    log TestLogInt(credit)
 
     # Outstanding debt the Strategy wants to take back from the Vault (if any)
     # NOTE: debtOutstanding <= StrategyParams.totalDebt
@@ -1807,6 +1810,7 @@ def report(gain: uint256, loss: uint256, _debtPayment: uint256) -> uint256:
     elif totalAvail > credit:  # credit deficit, take from Strategy
         self.erc20_safe_transferFrom(self.token.address, msg.sender, self, totalAvail - credit)
     # else, don't do anything because it is balanced
+    log TestLogInt(9)
 
     # Profit is locked and gradually released per block
     # NOTE: compute current locked profit and replace with sum of current and new
@@ -1831,7 +1835,6 @@ def report(gain: uint256, loss: uint256, _debtPayment: uint256) -> uint256:
         credit,
         self.strategies[msg.sender].debtRatio,
     )
-    log TestLogInt(9)
 
     if self.strategies[msg.sender].debtRatio == 0 or self.emergencyShutdown:
         # Take every last penny the Strategy has (Emergency Exit/revokeStrategy)
