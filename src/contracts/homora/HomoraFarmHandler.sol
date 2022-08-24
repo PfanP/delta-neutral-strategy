@@ -18,6 +18,8 @@ abstract contract HomoraFarmHandler {
     address public immutable homoraBank;
     address public immutable relevantHomoraSpell;
 
+    event Received(address, uint256);
+
     struct Amounts {
         uint256 amtAUser; // Supplied tokenA amount
         uint256 amtBUser; // Supplied tokenB amount
@@ -47,6 +49,11 @@ abstract contract HomoraFarmHandler {
         relevantHomoraSpell = _relevantHomoraSpell;
     }
 
+    // Receive ETH refunds from Homora Bank
+    receive() external payable {
+        emit Received(msg.sender, msg.value);
+    }
+
     // *** Sushiswap *** //
     // Open a position on SushiSwap thru Homora
     //
@@ -60,7 +67,7 @@ abstract contract HomoraFarmHandler {
         uint256 supplyLp,
         uint256 borrowToken0,
         uint256 borrowToken1,
-        uint256 pid // pool id
+        uint256 pid
     ) public returns (uint256) {
         if (supplyToken0 > 0) {
             IERC20(token0).approve(homoraBank, supplyToken0);

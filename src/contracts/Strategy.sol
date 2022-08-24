@@ -63,7 +63,7 @@ contract Strategy is BaseStrategy, HomoraFarmHandler, UniswapV2Swapper {
         address _sushiSwapSpell,
         address _uniswapV2Router,
         address _token1,
-        uint _farmLeverage,
+        uint _farmLeverage, // Farm Leverage in units of 1e18
         address _concaveOracle,
         address _lpToken,
         uint _pid 
@@ -311,7 +311,7 @@ contract Strategy is BaseStrategy, HomoraFarmHandler, UniswapV2Swapper {
             getCollateralETHValue(shortPositionId) - shortLoanValue, //shortEquityValue
             shortLoanValue,
             liquidityInjection,
-            farmLeverage * WAD
+            farmLeverage
         );
 
         emit debugString('MetaData Checks: ');
@@ -596,7 +596,7 @@ contract Strategy is BaseStrategy, HomoraFarmHandler, UniswapV2Swapper {
             shortEquityValue,
             shortLoanValue,
             harvestValue,
-            farmLeverage * WAD
+            farmLeverage
         );
 
         uint desiredAdjustment = data.getDesiredAdjustment();
@@ -614,15 +614,13 @@ contract Strategy is BaseStrategy, HomoraFarmHandler, UniswapV2Swapper {
             ethTokenAddress,
             token1
         );
-        
-        emit debugString('Long Equity Add & Long Loan Add BEFORE WAD');
-        emit debugUint(longEquityAdd);
-        emit debugUint(longLoanAdd);
 
         longEquityAdd = (longEquityAdd * token0Units) / WAD;
         longLoanAdd = (longLoanAdd * token0Units) / WAD;
         // Call Add Position
         // Position Long
+
+
 
         emit debugString('Long Equity Add & Long Loan Add');
         emit debugUint(longEquityAdd);
@@ -638,7 +636,7 @@ contract Strategy is BaseStrategy, HomoraFarmHandler, UniswapV2Swapper {
                 longLoanAdd,
                 0, // 0 Borrrow of token1
                 pid
-        );
+        ); 
         // Rebalancing: Say Eth price goes up
         // This farm is underlevereaged now
 
@@ -658,7 +656,7 @@ contract Strategy is BaseStrategy, HomoraFarmHandler, UniswapV2Swapper {
                 0,
                 0, // 0 Supply of LP
                 0, // 0 Borrow of token0
-                shortLoadAdd,
+                shortLoadAdd, // Borrow only Token 1
                 pid 
         );
 
@@ -667,6 +665,9 @@ contract Strategy is BaseStrategy, HomoraFarmHandler, UniswapV2Swapper {
             longPositionId = longPositionIdReturn;
             shortPositionId = shortPositionIdReturn;
         }
+
+        emit debugUint(longPositionId);
+        emit debugUint(shortPositionId);
     }
 
     function liquidatePosition(uint256 _amountNeeded)
@@ -717,7 +718,7 @@ contract Strategy is BaseStrategy, HomoraFarmHandler, UniswapV2Swapper {
             removeLongLpAmount,  //amtWithdraw
             0, 
             0, // Repay the amounts in LP Token
-            (removeLongLpAmount - removeLongLpAmount / farmLeverage)
+            (WAD * (removeLongLpAmount - removeLongLpAmount) / farmLeverage)
         );
 
         reducePositionSushiswap(
@@ -728,7 +729,7 @@ contract Strategy is BaseStrategy, HomoraFarmHandler, UniswapV2Swapper {
             removeShortLpAmount, //amtWithdraw
             0, 
             0,
-            (removeShortLpAmount - removeLongLpAmount / farmLeverage)
+            (WAD * (removeShortLpAmount - removeLongLpAmount) / farmLeverage)
         );
 
         // swap the token 1 into token 0 here
