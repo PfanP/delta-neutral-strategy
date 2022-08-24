@@ -624,7 +624,7 @@ contract Strategy is BaseStrategy, HomoraFarmHandler, UniswapV2Swapper {
         emit debugString('Long Equity Add & Long Loan Add');
         emit debugUint(longEquityAdd);
         emit debugUint(longLoanAdd);
-
+/*
         uint longPositionIdReturn = openOrIncreasePositionSushiswap(
                 longPositionId, 
                 token0,
@@ -635,15 +635,12 @@ contract Strategy is BaseStrategy, HomoraFarmHandler, UniswapV2Swapper {
                 longLoanAdd,
                 0, // 0 Borrrow of token1
                 pid
-        ); 
-        // Rebalancing: Say Eth price goes up
-        // This farm is underlevereaged now
+        ); */
 
         (uint token1Units, ) = IConcaveOracle(concaveOracle).getPrice(
             ethTokenAddress,
             token1
         );
-
         shortEquityAdd = shortEquityAdd * token0Units / WAD;
         shortLoanAdd = shortLoanAdd * token1Units / WAD;
         // Position Two
@@ -663,15 +660,30 @@ contract Strategy is BaseStrategy, HomoraFarmHandler, UniswapV2Swapper {
                 shortLoanAdd, // Borrow only Token 1
                 pid 
         );
-
+/*
         // Update the position IDs if opening new DN positions
         if (longPositionId == 0 && shortPositionId == 0) {
             longPositionId = longPositionIdReturn;
             shortPositionId = shortPositionIdReturn;
-        }
+        } */
 
-        emit debugUint(longPositionId);
-        emit debugUint(shortPositionId);
+        //emit debugUint(longPositionId);
+        //emit debugUint(shortPositionId); 
+
+        emit debugUint(shortPositionIdReturn);
+
+        emit debugString('Harvest Balance, Value and DAF:');
+        emit debugUint(want.balanceOf(address(this)));
+        emit debugUint(harvestValue);
+        emit debugUint(desiredAdjustment);
+
+        emit debugString('Long Equity Add & Long Loan Add');
+        emit debugUint(longEquityAdd);
+        emit debugUint(longLoanAdd);
+
+        emit debugString('Short Equity Add & Short Loan Add');
+        emit debugUint(shortEquityAdd);
+        emit debugUint(shortLoanAdd);
     }
 
     function liquidatePosition(uint256 _amountNeeded)
