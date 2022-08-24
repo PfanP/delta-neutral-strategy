@@ -66,7 +66,8 @@ contract Strategy is BaseStrategy, HomoraFarmHandler, UniswapV2Swapper {
         uint _farmLeverage, // Farm Leverage in units of 1e18
         address _concaveOracle,
         address _lpToken,
-        uint _pid 
+        uint _pid,
+        address _ethTokenAddress
     ) BaseStrategy(_vault) 
     HomoraFarmHandler(_homoraBank, _sushiSwapSpell) 
     UniswapV2Swapper(_uniswapV2Router)
@@ -84,6 +85,7 @@ contract Strategy is BaseStrategy, HomoraFarmHandler, UniswapV2Swapper {
         concaveOracle = _concaveOracle;
         lpToken = _lpToken;
         pid = _pid;
+        ethTokenAddress = _ethTokenAddress;
     }
 
     // ******** OVERRIDE THESE METHODS FROM BASE CONTRACT ************
@@ -603,25 +605,22 @@ contract Strategy is BaseStrategy, HomoraFarmHandler, UniswapV2Swapper {
         uint longEquityAdd = data.getLongEquityAdd(desiredAdjustment);
         uint longLoanAdd = data.getLongLoanAdd(desiredAdjustment);
         uint shortEquityAdd = data.getShortEquityAdd(desiredAdjustment);
-        uint shortLoadAdd = data.getShortLoanAdd(desiredAdjustment);
-
+        uint shortLoanAdd = data.getShortLoanAdd(desiredAdjustment);
+        
+        emit debugString('Harvest Balance, Value and DAF:');
+        emit debugUint(want.balanceOf(address(this)));
+        emit debugUint(harvestValue);
+        emit debugUint(desiredAdjustment);
 
         (uint token0Units, ) = IConcaveOracle(concaveOracle).getPrice(
             ethTokenAddress,
             token0
-        );
-        (uint token1Units, ) = IConcaveOracle(concaveOracle).getPrice(
-            ethTokenAddress,
-            token1
         );
 
         longEquityAdd = (longEquityAdd * token0Units) / WAD;
         longLoanAdd = (longLoanAdd * token0Units) / WAD;
         // Call Add Position
         // Position Long
-
-
-
         emit debugString('Long Equity Add & Long Loan Add');
         emit debugUint(longEquityAdd);
         emit debugUint(longLoanAdd);
@@ -640,13 +639,18 @@ contract Strategy is BaseStrategy, HomoraFarmHandler, UniswapV2Swapper {
         // Rebalancing: Say Eth price goes up
         // This farm is underlevereaged now
 
+        (uint token1Units, ) = IConcaveOracle(concaveOracle).getPrice(
+            ethTokenAddress,
+            token1
+        );
+
         shortEquityAdd = shortEquityAdd * token0Units / WAD;
-        shortLoadAdd = shortLoadAdd * token1Units / WAD;
+        shortLoanAdd = shortLoanAdd * token1Units / WAD;
         // Position Two
 
-        emit debugString('Short Equity Add & Long Loan Add');
+        emit debugString('Short Equity Add & Short Loan Add');
         emit debugUint(shortEquityAdd);
-        emit debugUint(shortLoadAdd);
+        emit debugUint(shortLoanAdd);
 
         uint shortPositionIdReturn = openOrIncreasePositionSushiswap(
                 shortPositionId, 
@@ -656,7 +660,7 @@ contract Strategy is BaseStrategy, HomoraFarmHandler, UniswapV2Swapper {
                 0,
                 0, // 0 Supply of LP
                 0, // 0 Borrow of token0
-                shortLoadAdd, // Borrow only Token 1
+                shortLoanAdd, // Borrow only Token 1
                 pid 
         );
 
