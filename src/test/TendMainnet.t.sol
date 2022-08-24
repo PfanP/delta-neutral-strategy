@@ -252,7 +252,7 @@ contract ConcaveOracle {
         // For the tests it's either DAI - ETH | or ETH - DAI
         if (token0 == 0x6B175474E89094C44Da98b954EedeAC495271d0F) { // DAI
             return (588e12, 0); 
-        } else if (token0 == 0xC02aaA39b223FE8D0A0e5C4F27eAD9083C756Cc2) { // WETH
+        } else if (token0 == 0xC02aaA39b223FE8D0A0e5C4F27eAD9083C756Cc2 && tokenUnit == 0x6B175474E89094C44Da98b954EedeAC495271d0F) { // WETH - DAI
             return (1700e18, 0); 
         }
         else {
