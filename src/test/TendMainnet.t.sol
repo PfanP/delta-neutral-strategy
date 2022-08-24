@@ -64,9 +64,6 @@ contract TendTest is ExtendedTest, VyperTest {
             //_guardian,
             //_management
         );
-        vm.prank(governance);
-        vault.setDepositLimit(90000e18);
-
         
         DNStrategy = new Strategy(
             address(vault),
