@@ -36,6 +36,7 @@ contract TendTest is ExtendedTest, VyperTest {
     address mainnetEth = 0xC02aaA39b223FE8D0A0e5C4F27eAD9083C756Cc2; // WETH on ETH
     address mainnetChainlinkRegistry = 0x47Fb2585D2C56Fe188D0E6ec628a38b74fCeeeDf;
 
+
     uint pid = 2; 
     address daiWhale = 0x5d3a536E4D6DbD6114cc1Ead35777bAB948E3643;
 
@@ -53,7 +54,7 @@ contract TendTest is ExtendedTest, VyperTest {
         vault = IVault(
             //vyperDeployer.deployContract("Vault", abi.encode())
             //_vaultAddress
-            deployContract("vyper_contracts/Vault.vy")
+            deployContract("/Users/ran/Project/concave/vyper-concave-vault/src/vyper_contracts/Vault.vy")
         );
 
         string memory _name = 'CVault';

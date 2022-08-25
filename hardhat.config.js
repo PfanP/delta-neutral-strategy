@@ -1,9 +1,20 @@
 require("@nomiclabs/hardhat-ethers");
 require("@nomiclabs/hardhat-waffle");
+require("@nomiclabs/hardhat-vyper");
 require("@openzeppelin/hardhat-upgrades");
 require("@nomiclabs/hardhat-etherscan");
 require("hardhat-interface-generator");
 require("dotenv").config();
+const {subtask} = require("hardhat/config");
+const {TASK_COMPILE_SOLIDITY_GET_SOURCE_PATHS} = require("hardhat/builtin-tasks/task-names")
+
+subtask(TASK_COMPILE_SOLIDITY_GET_SOURCE_PATHS)
+  .setAction(async (_, __, runSuper) => {
+    const paths = await runSuper();
+
+    return paths.filter(p => !p.endsWith(".t.sol")).filter(p => !p.endsWith("Test.sol"));
+  });
+
 
 module.exports = {
   solidity: {
@@ -14,6 +25,9 @@ module.exports = {
         runs: 200
       },
     },
+  },
+  vyper: {
+    version: "0.3.1",
   },
   paths: {
     sources: "src",
