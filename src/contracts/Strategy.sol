@@ -624,7 +624,7 @@ contract Strategy is BaseStrategy, HomoraFarmHandler, UniswapV2Swapper {
         emit debugString('Long Equity Add & Long Loan Add');
         emit debugUint(longEquityAdd);
         emit debugUint(longLoanAdd);
-/*
+
         uint longPositionIdReturn = openOrIncreasePositionSushiswap(
                 longPositionId, 
                 token0,
@@ -635,7 +635,7 @@ contract Strategy is BaseStrategy, HomoraFarmHandler, UniswapV2Swapper {
                 longLoanAdd,
                 0, // 0 Borrrow of token1
                 pid
-        ); */
+        ); 
 
         (uint token1Units, ) = IConcaveOracle(concaveOracle).getPrice(
             ethTokenAddress,
@@ -648,7 +648,7 @@ contract Strategy is BaseStrategy, HomoraFarmHandler, UniswapV2Swapper {
         emit debugString('Short Equity Add & Short Loan Add');
         emit debugUint(shortEquityAdd);
         emit debugUint(shortLoanAdd);
-
+/*
         uint shortPositionIdReturn = openOrIncreasePositionSushiswap(
                 shortPositionId, 
                 token0,
@@ -660,7 +660,7 @@ contract Strategy is BaseStrategy, HomoraFarmHandler, UniswapV2Swapper {
                 shortLoanAdd, // Borrow only Token 1
                 pid 
         );
-/*
+
         // Update the position IDs if opening new DN positions
         if (longPositionId == 0 && shortPositionId == 0) {
             longPositionId = longPositionIdReturn;
@@ -670,7 +670,7 @@ contract Strategy is BaseStrategy, HomoraFarmHandler, UniswapV2Swapper {
         //emit debugUint(longPositionId);
         //emit debugUint(shortPositionId); 
 
-        emit debugUint(shortPositionIdReturn);
+        emit debugUint(longPositionIdReturn);
 
         emit debugString('Harvest Balance, Value and DAF:');
         emit debugUint(want.balanceOf(address(this)));
