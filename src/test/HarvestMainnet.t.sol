@@ -13,8 +13,6 @@ import {VyperTest} from "../../utils/VyperTest.sol";
 import {IHomoraBank} from "../interfaces/IHomoraBank.sol";
 import {IERC20} from "../interfaces/IERC20.sol";
 
-string constant vaultArtifact = "artifacts/Vault.json";
-
 contract HarvestTest is ExtendedTest, VyperTest {
     Strategy DNStrategy;
     //Token vaultToken;
@@ -46,8 +44,13 @@ contract HarvestTest is ExtendedTest, VyperTest {
         IHomoraBank hBank = IHomoraBank(hBankAddress);
         dai = IERC20(mainnetDAI);
 
-        address _vaultAddress = deployCode(vaultArtifact);
-        vault = IVault(_vaultAddress);
+        // address _vaultAddress = deployCode(vaultArtifact);
+        // vault = IVault(_vaultAddress);
+        vault = IVault(
+            //vyperDeployer.deployContract("Vault", abi.encode())
+            //_vaultAddress
+            deployContract("/Volumes/Data/ConCave/vyper-concave-vault/src/vyper_contracts/Vault.vy")
+        );
 
         string memory _name = 'CVault';
         string memory _symbol = 'vCNV';
