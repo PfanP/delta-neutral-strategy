@@ -34,7 +34,7 @@ contract TendTest is ExtendedTest, VyperTest {
     address keeper = 0x0000000000000000000000000000000000000003; // Our Bot keeper address
     address mainnetDAI = 0x6B175474E89094C44Da98b954EedeAC495271d0F;
     address mainnetEth = 0xC02aaA39b223FE8D0A0e5C4F27eAD9083C756Cc2; // WETH on ETH
-    address mainnetChainlink = ;
+    address mainnetChainlinkRegistry = 0x47Fb2585D2C56Fe188D0E6ec628a38b74fCeeeDf;
 
     uint pid = 2; 
     address daiWhale = 0x5d3a536E4D6DbD6114cc1Ead35777bAB948E3643;
