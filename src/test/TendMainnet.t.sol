@@ -28,11 +28,14 @@ contract TendTest is ExtendedTest, VyperTest {
 
     address token0 = 0x6B175474E89094C44Da98b954EedeAC495271d0F; // DAI on ETH
     address token1 = 0xC02aaA39b223FE8D0A0e5C4F27eAD9083C756Cc2; // WETH on ETH
-    uint farmLeverage = 1e18;
+    uint farmLeverage = 20e17;
     address lpToken = 0xC3D03e4F041Fd4cD388c549Ee2A29a9E5075882f; // DAI<>WETh LP on SushiSwap | OR MAYBE this is the WMasterChef
 
     address keeper = 0x0000000000000000000000000000000000000003; // Our Bot keeper address
     address mainnetDAI = 0x6B175474E89094C44Da98b954EedeAC495271d0F;
+    address mainnetEth = 0xC02aaA39b223FE8D0A0e5C4F27eAD9083C756Cc2; // WETH on ETH
+    address mainnetChainlink = ;
+
     uint pid = 2; 
     address daiWhale = 0x5d3a536E4D6DbD6114cc1Ead35777bAB948E3643;
 
@@ -74,7 +77,8 @@ contract TendTest is ExtendedTest, VyperTest {
             farmLeverage,
             address(concaveOracle),
             lpToken,
-            pid
+            pid,
+            mainnetEth
         );
 
         vault.addStrategy(
@@ -245,8 +249,16 @@ contract ConcaveOracle {
         external
         view
         returns (uint256, uint256)
-    {
-        return (1e18, 0); 
+    {   
+        // For the tests it's either DAI - ETH | or ETH - DAI
+        if (token0 == 0x6B175474E89094C44Da98b954EedeAC495271d0F) { // DAI
+            return (588e12, 0); 
+        } else if (token0 == 0xC02aaA39b223FE8D0A0e5C4F27eAD9083C756Cc2 && tokenUnit == 0x6B175474E89094C44Da98b954EedeAC495271d0F) { // WETH - DAI
+            return (1700e18, 0); 
+        }
+        else {
+            return (1e18, 0); 
+        }
     }
 
     function support(address token) external view returns (bool) {
