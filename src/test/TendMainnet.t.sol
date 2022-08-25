@@ -50,7 +50,7 @@ contract TendTest is ExtendedTest, VyperTest {
         vault = IVault(
             //vyperDeployer.deployContract("Vault", abi.encode())
             //_vaultAddress
-            deployContract("vyper_contracts/Vault.vy")
+            deployContract("/Users/ran/Project/concave/vyper-concave-vault/src/vyper_contracts/Vault.vy")
         );
 
         string memory _name = 'CVault';
