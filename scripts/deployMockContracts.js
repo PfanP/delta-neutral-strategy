@@ -5,7 +5,12 @@ const {
 const {
     toChecksumAddress
 } = require("ethereum-checksum-address")
-const { BigNumber } = require("ethers");
+const {
+    BigNumber
+} = require("ethers");
+const {
+    abi
+} = require("../out/src/vyper_contracts/Vault.vy/Vault.json");
 
 // NOTE: bonding needs to be added as a CNV minter for bonds.policyUpdate() to work
 // @dev npx hardhat verify <CONTRACT_ADDRESS> --network <NETWORK_NAME>
@@ -18,7 +23,7 @@ async function main() {
     // /*                              DEPLOY ORACLE                                  */
     // /* -------------------------------------------------------------------------- */
     const mockDAI = "0xf2edF1c091f683E3fb452497d9a98A49cBA84666";
-    const mockWETH = "0xce88D2C5D5a2efe7AE1024D9D34A32a753C1C719";
+    const mockWETH = "0xf2edF1c091f683E3fb452497d9a98A49cBA84666";
     const deviation = "1500000000000000000"
     const emptyAddress = "0x0000000000000000000000000000000000000000";
 
@@ -28,45 +33,60 @@ async function main() {
 
     const tokens = [mockDAI, mockWETH]
     const deviations = [BigNumber.from(deviation), BigNumber.from(deviation)]
-    const oracles = [[baseOracle.address, baseOracle.address], [baseOracle.address, baseOracle.address]]
-
-    await oracle.addPrimarySource(tokens, deviations, oracles);
+    const oracles = [
+        [baseOracle.address, baseOracle.address],
+        [baseOracle.address, baseOracle.address]
+    ]
+    const resp = await oracle.addPrimarySource(tokens, deviations, oracles);
 
     const vault = await deploy("Vault");
-    const strategy = await deploy("Strategy",
-    {
-        _vault: vault.address,
-        _homoraBank: emptyAddress,
-        _sushiSwapSpell: emptyAddress,
-        _uniswapV2Router: emptyAddress,
-        _token1: mockDAI,
-        _farmLeverage: BigNumber.from("2000000000000000000"),
-        _concaveOracle: oracle.address,
-        _lpToken: emptyAddress,
-        _pid: 0,
-        _ethTokenAddress: mockWETH
-    }
-    );
+
+    // const vaultContract = await ethers.getContractAt(abi, vaultDeployed.address) 
     await vault.initialize(
-        [mockDAI,
+        mockDAI,
         deployer.address,
         emptyAddress,
         "MockVault",
         "CNVV",
         deployer.address,
         deployer.address,
-        emptyAddress]
+        emptyAddress
     )
-    await vault.addStrategy(strategy.address, 1000, 0, 1000, 0);
+    console.log("vault initilize sucessfully");
+    const strategy = await ethers.getContractFactory("MockStrategy");
+    console.log("Deploying Strategy...");
+    const deployedStrategy = await strategy.deploy(
+        vault.address, // _vault
+        emptyAddress, // _homoraBank
+        emptyAddress, // _sushiSwapSpell
+        emptyAddress, // _uniswapV2Router
+        mockDAI, // _token1
+        BigNumber.from("2000000000000000000"), // _farmLeverage
+        oracle.address, // _concaveOracle
+        emptyAddress, // _lpToken
+        0, // _pid
+        emptyAddress // _ethTokenAddress
+    );
+    await deployedStrategy.deployed();
+    console.log("deployedStrategy Address: ", deployedStrategy.address);
+
+    await vault.addStrategy(deployedStrategy.address, 1000, 0, 1000, 0);
 }
 
-async function deploy(contractName, args) {
+async function deploy(contractName, ...args) {
     console.log(`Deploying ${contractName}..., with args: ${args}`);
     const contract = await ethers.getContractFactory(contractName);
     console.log("Deploying" + contractName);
-    const deployedContract = await contract.deploy(args);
+    var deployedContract = undefined;
+    if (args == undefined) {
+        deployedContract = await contract.deploy();
+    } else {
+        deployedContract = await contract.deploy(args);
+    }
     await deployedContract.deployed();
     console.log(contractName + "Address: ", deployedContract.address);
     return deployedContract;
 }
 main();
+
+const txGasControl = {'gasPrice': currentGasPrice.mul(gasPedal), 'gasLimit': 300000};

@@ -49,7 +49,7 @@ module.exports = {
     },
     goerli: {
       url: process.env.GOERLI_ALCHEMY,
-      accounts: [process.env.PRIVATE_KEY],
+      accounts: [process.env.PRIVATE_KEY]
     },
   },
   etherscan: {
