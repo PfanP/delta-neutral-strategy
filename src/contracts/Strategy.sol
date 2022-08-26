@@ -648,7 +648,7 @@ contract Strategy is BaseStrategy, HomoraFarmHandler, UniswapV2Swapper {
         emit debugString('Short Equity Add & Short Loan Add');
         emit debugUint(shortEquityAdd);
         emit debugUint(shortLoanAdd);
-/*
+
         uint shortPositionIdReturn = openOrIncreasePositionSushiswap(
                 shortPositionId, 
                 token0,
@@ -665,12 +665,7 @@ contract Strategy is BaseStrategy, HomoraFarmHandler, UniswapV2Swapper {
         if (longPositionId == 0 && shortPositionId == 0) {
             longPositionId = longPositionIdReturn;
             shortPositionId = shortPositionIdReturn;
-        } */
-
-        //emit debugUint(longPositionId);
-        //emit debugUint(shortPositionId); 
-
-        emit debugUint(longPositionIdReturn);
+        } 
 
         emit debugString('Harvest Balance, Value and DAF:');
         emit debugUint(want.balanceOf(address(this)));
@@ -864,6 +859,10 @@ contract Strategy is BaseStrategy, HomoraFarmHandler, UniswapV2Swapper {
     {
         // TODO create an accurate price oracle
         return _amtInWei;
+    }
+
+    function getPositionIds() external view returns (uint256, uint256) {
+        return (longPositionId, shortPositionId);
     }
 
 }

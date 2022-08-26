@@ -28,14 +28,13 @@ contract TendTest is ExtendedTest, VyperTest {
 
     address token0 = 0x6B175474E89094C44Da98b954EedeAC495271d0F; // DAI on ETH
     address token1 = 0xC02aaA39b223FE8D0A0e5C4F27eAD9083C756Cc2; // WETH on ETH
-    uint farmLeverage = 20e17;
+    uint farmLeverage = 15e17;
     address lpToken = 0xC3D03e4F041Fd4cD388c549Ee2A29a9E5075882f; // DAI<>WETh LP on SushiSwap | OR MAYBE this is the WMasterChef
 
     address keeper = 0x0000000000000000000000000000000000000003; // Our Bot keeper address
     address mainnetDAI = 0x6B175474E89094C44Da98b954EedeAC495271d0F;
     address mainnetEth = 0xC02aaA39b223FE8D0A0e5C4F27eAD9083C756Cc2; // WETH on ETH
     address mainnetChainlinkRegistry = 0x47Fb2585D2C56Fe188D0E6ec628a38b74fCeeeDf;
-
 
     uint pid = 2; 
     address daiWhale = 0x5d3a536E4D6DbD6114cc1Ead35777bAB948E3643;
@@ -54,7 +53,7 @@ contract TendTest is ExtendedTest, VyperTest {
         vault = IVault(
             //vyperDeployer.deployContract("Vault", abi.encode())
             //_vaultAddress
-            deployContract("/Users/ran/Project/concave/vyper-concave-vault/src/vyper_contracts/Vault.vy")
+            deployContract("src/vyper_contracts/Vault.vy")
         );
 
         string memory _name = 'CVault';
@@ -103,22 +102,6 @@ contract TendTest is ExtendedTest, VyperTest {
 
     }
 
-    /*
-    uint _longPositionId = 1;
-    uint _shortPositionId = 2;
-
-    uint _mockHarvestAmount = 0;
-    uint _longPositionEquityETH = 2e18;
-    uint _longPositionLoanETH = 3e18;
-    uint _shortPositionEquityETH = 8e17;
-    uint _shortPositionLoanETH = 3e18; 
-    uint _longLPAmount = 2e18;
-    uint _shortLPAmount = 2e18;
-
-    uint _longPositionDebtToken0 = 20e18;
-    uint _shortPositionDebtToken1 = 3e18;
-    */
-
     function setupPosition() public {
         vault.setDepositLimit(90000e18); // This contract is the vault governor
 
@@ -134,10 +117,96 @@ contract TendTest is ExtendedTest, VyperTest {
         DNStrategy.harvest(); 
     }
 
+    // Create a position adjuster to change the balance of the positions for testing
+    // Functions: Increase / decrease loans
+    // Increase / decrease equity
+    function addToDNPositions(
+        uint longPositionId, 
+        uint shortPositionId,
+        uint longEquityAdd, // Units are in DAI
+        uint shortEquityAdd, // Units are in DAI
+        uint longLoanAdd, // Units are in DAI
+        uint shortLoanAdd // Units are in ETH
+    ) public {
+        vm.prank(daiWhale);
+        dai.transfer(address(DNStrategy),longEquityAdd);
+
+        uint beforeEquityAdd = DNStrategy.getCollateralETHValue(longPositionId);
+        DNStrategy.openOrIncreasePositionSushiswap(
+                longPositionId, 
+                token0,
+                token1,
+                longEquityAdd,
+                0,
+                0, // 0 Supply of LP
+                longLoanAdd, // Borrow token0
+                0,
+                pid 
+        );
+
+        emit log_uint(1234);
+        emit log_uint(beforeEquityAdd);
+        emit log_uint(DNStrategy.getCollateralETHValue(longPositionId));
+
+        vm.prank(daiWhale);
+        dai.transfer(address(DNStrategy),shortEquityAdd);
+        uint beforeShortPositionAdd = DNStrategy.getCollateralETHValue(shortPositionId);
+        
+        DNStrategy.openOrIncreasePositionSushiswap(
+            shortPositionId, 
+            token0,
+            token1,
+            shortEquityAdd,
+            0,
+            0, // 0 Supply of LP
+            0, // 0 Borrow of token0
+            shortLoanAdd, // Borrow only Token 1
+            pid 
+        );  
+
+        emit log_uint(5678);
+        emit log_uint(beforeShortPositionAdd);
+        emit log_uint(DNStrategy.getCollateralETHValue(shortPositionId));
+
+    }
+/*
+    function removeFromDNPositions(
+        uint longPositionId, 
+        uint shortPositionId,
+        uint longEquityRemove, // Convert To Units of DAI
+        uint shortEquityRemove, // Convert To Units of DAI
+        uint longLoanRemove, // Convert To Units of DAI
+        uint shortLoanRemove // Convert To Units of ETH
+    ) {
+        
+    } */ 
 
     function test_mainnetTend() public {
         setupPosition();
 
+        (uint longPositionId, uint shortPositionId) = DNStrategy.getPositionIds();
+        
+        emit log_uint(longPositionId);
+        emit log_uint(shortPositionId);
+
+        uint longEquityAdd = 500 ether; // Units of DAI
+        uint shortEquityAdd = 1000 ether; // Units of DAI
+        uint longLoanAdd = 0 ether; // Units of DAI
+        uint shortLoanAdd = 1e17; // Units of ETH
+        addToDNPositions(
+            longPositionId,
+            shortPositionId,
+            longEquityAdd,
+            shortEquityAdd,
+            longLoanAdd,
+            shortLoanAdd
+        );
+
+        //DNStrategy.tend(false); 
+
+        // Override mode could liquidate everything into LP tokens - 
+        // Then, it would put them back into balanced positions
+        
         // Test the Override Mode
         //DNStrategy.tend(true);
         /*
