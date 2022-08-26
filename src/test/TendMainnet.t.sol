@@ -169,17 +169,35 @@ contract TendTest is ExtendedTest, VyperTest {
         emit log_uint(DNStrategy.getCollateralETHValue(shortPositionId));
 
     }
-/*
+
     function removeFromDNPositions(
         uint longPositionId, 
         uint shortPositionId,
-        uint longEquityRemove, // Convert To Units of DAI
-        uint shortEquityRemove, // Convert To Units of DAI
-        uint longLoanRemove, // Convert To Units of DAI
-        uint shortLoanRemove // Convert To Units of ETH
-    ) {
-        
-    } */ 
+        uint amtLpTake, // Convert To Units of DAI
+        uint amtLpWithdraw,
+        uint amtRepayToken0, // Convert To Units of DAI
+        uint amtRepayToken1, // Convert To Units of DAI
+        uint amountLpRepay // Convert To Units of ETH
+    ) public {
+
+        //vm.prank(daiWhale);
+        //dai.transfer(address(DNStrategy),100);
+        (,,,uint lpAmount) = DNStrategy.getPositionInfo(longPositionId);
+        emit log_uint(1234);
+        emit log_uint(lpAmount);
+
+        DNStrategy.reducePositionSushiswap(
+            longPositionId,
+            token0,
+            token1,
+            amtLpTake,
+            amtLpWithdraw,
+            amtRepayToken0, // amt repay token0
+            amtRepayToken1, // amt repay token1
+            amountLpRepay   // amount Lp repay
+        );
+
+    } 
 
     function test_mainnetTend() public {
         setupPosition();
@@ -191,8 +209,9 @@ contract TendTest is ExtendedTest, VyperTest {
 
         uint longEquityAdd = 500 ether; // Units of DAI
         uint shortEquityAdd = 1000 ether; // Units of DAI
-        uint longLoanAdd = 0 ether; // Units of DAI
+        uint longLoanAdd = 100 ether; // Units of DAI
         uint shortLoanAdd = 1e17; // Units of ETH
+        
         addToDNPositions(
             longPositionId,
             shortPositionId,
@@ -201,6 +220,23 @@ contract TendTest is ExtendedTest, VyperTest {
             longLoanAdd,
             shortLoanAdd
         );
+
+        uint amtLpTake = 1e10;
+        uint amtLpWithdraw = 1e10;
+        uint amtRepayToken0 = 1;
+        uint amtRepayToken1 = 1;
+        uint amountLpRepay = 1;
+/*
+        removeFromDNPositions(
+            longPositionId, 
+            shortPositionId,
+            amtLpTake, // Convert To Units of DAI
+            amtLpWithdraw,
+            amtRepayToken0, // Convert To Units of DAI
+            amtRepayToken1, // Convert To Units of DAI
+            amountLpRepay 
+        );  */ 
+
 
         //DNStrategy.tend(false); 
 
