@@ -37,12 +37,12 @@ async function main() {
         [baseOracle.address, baseOracle.address],
         [baseOracle.address, baseOracle.address]
     ]
-    const resp = await oracle.addPrimarySource(tokens, deviations, oracles);
+    const addPrimarySource = await oracle.addPrimarySource(tokens, deviations, oracles);
+    await addPrimarySource.wait();
 
     const vault = await deploy("Vault");
-
     // const vaultContract = await ethers.getContractAt(abi, vaultDeployed.address) 
-    await vault.initialize(
+    const initilizeResp = await vault.initialize(
         mockDAI,
         deployer.address,
         emptyAddress,
@@ -52,6 +52,7 @@ async function main() {
         deployer.address,
         emptyAddress
     )
+    await initilizeResp.wait();
     console.log("vault initilize sucessfully");
     const strategy = await ethers.getContractFactory("MockStrategy");
     console.log("Deploying Strategy...");
@@ -70,7 +71,9 @@ async function main() {
     await deployedStrategy.deployed();
     console.log("deployedStrategy Address: ", deployedStrategy.address);
 
-    await vault.addStrategy(deployedStrategy.address, 1000, 0, 1000, 0);
+    const addStrategyResp = await vault.addStrategy(deployedStrategy.address, 1000, 0, 1000, 0);
+    await addStrategyResp.wait();
+    console.log("addStrategyResp sucessfully");
 }
 
 async function deploy(contractName, ...args) {
@@ -88,5 +91,3 @@ async function deploy(contractName, ...args) {
     return deployedContract;
 }
 main();
-
-const txGasControl = {'gasPrice': currentGasPrice.mul(gasPedal), 'gasLimit': 300000};
