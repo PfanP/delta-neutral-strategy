@@ -22,5 +22,11 @@ async function main() {
     const concaveOracle = await oracle.deploy();
     await concaveOracle.deployed();
     console.log("ConcaveOracle Address: ", concaveOracle.address);
+
+    const vault = await ethers.getContractFactory("Vault");
+    console.log("Deploying Vault...");
+    const vaultDeployed = await vault.deploy();
+    await vaultDeployed.deployed();
+    console.log("vaultDeployed Address: ", vaultDeployed.address);
 }
 main();
