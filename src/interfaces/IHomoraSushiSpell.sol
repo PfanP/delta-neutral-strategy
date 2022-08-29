@@ -16,6 +16,16 @@
         uint amtBMin; // Desired tokenB amount (slippage control)
     } 
 
+    struct RepayAmounts {
+        uint amtLPTake; // Take out LP token amount (from Homora)
+        uint amtLPWithdraw; // Withdraw LP token amount (back to caller)
+        uint amtARepay; // Repay tokenA amount
+        uint amtBRepay; // Repay tokenB amount
+        uint amtLPRepay; // Repay LP token amount
+        uint amtAMin; // Desired tokenA amount
+        uint amtBMin; // Desired tokenB amount
+    }
+
     function acceptGovernor() external;
     function addLiquidityWERC20(address _tokenA, address _tokenB, Amounts calldata _amt) external;
     function addLiquidityWMasterChef(address _tokenA, address _tokenB, Amounts calldata _amt, uint256 _pid) external;
@@ -29,8 +39,8 @@
     function onERC1155Received(address, address, uint256, uint256, bytes calldata) external returns (bytes4);
     function pairs(address, address) external returns (address);
     function pendingGovernor() external returns (address);
-    function removeLiquidityWERC20(address _tokenA, address _tokenB, Amounts calldata _amt) external;
-    function removeLiquidityWMasterChef(address _tokenA, address _tokenB, Amounts calldata _amt) external;
+    function removeLiquidityWERC20(address _tokenA, address _tokenB, RepayAmounts calldata _amt) external;
+    function removeLiquidityWMasterChef(address _tokenA, address _tokenB, RepayAmounts calldata _amt) external;
     function router() external returns (address);
     function setPendingGovernor(address __pendingGovernor) external;
     function setWhitelistLPTokens(address[] memory _lpTokens, bool[] memory _statuses) external;
