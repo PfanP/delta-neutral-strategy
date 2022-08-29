@@ -50,11 +50,12 @@ contract TendTest is ExtendedTest, VyperTest {
         //string memory vaultArtifact = "artifacts/Vault.json";
         //address _vaultAddress = deployCode(vaultArtifact);
         //VyperDeployer vyperDeployer = new VyperDeployer();
+        
         vault = IVault(
             //vyperDeployer.deployContract("Vault", abi.encode())
             //_vaultAddress
             deployContract("src/vyper_contracts/Vault.vy")
-        );
+        ); 
 
         string memory _name = 'CVault';
         string memory _symbol = 'vCNV';
@@ -66,7 +67,7 @@ contract TendTest is ExtendedTest, VyperTest {
             _symbol//,
             //_guardian,
             //_management
-        );
+        ); 
         
         DNStrategy = new Strategy(
             address(vault),
@@ -87,7 +88,7 @@ contract TendTest is ExtendedTest, VyperTest {
             0, // _minDebtPerHarvest 
             type(uint256).max, // _maxDebtPerHarvest 
             0  // performanceFee
-        );
+        ); 
 
         address[] memory users = new address[](1);
         users[0] = address(DNStrategy);
@@ -113,6 +114,7 @@ contract TendTest is ExtendedTest, VyperTest {
         vm.stopPrank();
 
         emit log_uint(dai.balanceOf(address(vault)));
+        
         // Get the tokens into the strategy 
         DNStrategy.harvest(); 
     }
@@ -221,12 +223,12 @@ contract TendTest is ExtendedTest, VyperTest {
             shortLoanAdd
         );
 
-        uint amtLpTake = 1e10;
-        uint amtLpWithdraw = 1e10;
-        uint amtRepayToken0 = 1;
-        uint amtRepayToken1 = 1;
-        uint amountLpRepay = 1;
-/*
+        uint amtLpTake = 1e16;
+        uint amtLpWithdraw = 1e16;
+        uint amtRepayToken0 = 0;
+        uint amtRepayToken1 = 0;
+        uint amountLpRepay = 0;
+
         removeFromDNPositions(
             longPositionId, 
             shortPositionId,
@@ -235,8 +237,9 @@ contract TendTest is ExtendedTest, VyperTest {
             amtRepayToken0, // Convert To Units of DAI
             amtRepayToken1, // Convert To Units of DAI
             amountLpRepay 
-        );  */ 
-
+        ); 
+        
+        emit log_uint(88888888888888);
 
         //DNStrategy.tend(false); 
 
