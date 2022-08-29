@@ -47,7 +47,11 @@ module.exports = {
       url: process.env.MAINNET_ALCHEMY,
       accounts: [process.env.PRIVATE_KEY],
     },
-  }, 
+    goerli: {
+      url: process.env.GOERLI_ALCHEMY,
+      accounts: [process.env.PRIVATE_KEY]
+    },
+  },
   etherscan: {
     apiKey: process.env.ETHERSCAN_API_KEY,
   }, 

@@ -1,0 +1,7 @@
+module.exports = {
+    MockERC20: "0xD0ED416876ED059352997BE58a501910ce9De08e",
+    ConcaveOracle: "0xf8f0016D40011Cf4715aF184522fD230EC40dfae",
+    BaseOracle: undefined,
+    Vault: "0x68A8CF18BbC61eCC33BCb046eAcB9FB03eE46936",
+    Strategy: "0x280f3967a0a405aE6069a3E0d5D88dBD06d1c90e",
+}

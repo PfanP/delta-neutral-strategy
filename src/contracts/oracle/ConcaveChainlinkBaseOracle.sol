@@ -21,9 +21,13 @@ contract ConcaveChainlinkBaseOracle is IBaseOracle, Governable {
 
     // represents the ETH token address in Chainlink
     address public constant ETH = 0xEeeeeEeeeEeEeeEeEeEeeEEEeeeeEeeeeeeeEEeE;
+    address public constant WETH = 0xC02aaA39b223FE8D0A0e5C4F27eAD9083C756Cc2;
+
 
     // represents the BTC token address in Chainlink
+    // need remapped
     address public constant BTC = 0xbBbBBBBbbBBBbbbBbbBbbbbBBbBbbbbBbBbbBBbB;
+    address public constant WBTC = 0xd4CBa86EF2c9DC7103522b54101143bbcd617D4A;
 
     // represents the USD token address in Chainlink
     address public constant USD = address(840);
@@ -46,7 +50,7 @@ contract ConcaveChainlinkBaseOracle is IBaseOracle, Governable {
     /// @dev Return the value of the given input as ETH per unit, multiplied by 2**112.
     /// @param _token The ERC-20 token to check the value.
     function getETHPx(address _token) external view returns (uint256) {
-        if (_token == ETH) {
+        if (_token == ETH || _token == WETH) {
             return 2 << 111;
         }
         // get decimals for token, if there is no decimals, get default 18
