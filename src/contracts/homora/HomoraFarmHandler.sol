@@ -32,13 +32,13 @@ abstract contract HomoraFarmHandler {
     }
 
     struct RepayAmounts {
-        uint256 amtLPTake; // Take out LP token amount (from Homora)
-        uint256 amtLPWithdraw; // Withdraw LP token amount (back to caller)
-        uint256 amtARepay; // Repay tokenA amount
-        uint256 amtBRepay; // Repay tokenB amount
-        uint256 amtLPRepay; // Repay LP token amount
-        uint256 amtAMin; // Desired tokenA amount
-        uint256 amtBMin; // Desired tokenB amount
+        uint amtLPTake; // Take out LP token amount (from Homora)
+        uint amtLPWithdraw; // Withdraw LP token amount (back to caller)
+        uint amtARepay; // Repay tokenA amount
+        uint amtBRepay; // Repay tokenB amount
+        uint amtLPRepay; // Repay LP token amount
+        uint amtAMin; // Desired tokenA amount
+        uint amtBMin; // Desired tokenB amount
     }
 
     constructor(
@@ -120,7 +120,7 @@ abstract contract HomoraFarmHandler {
         uint256 repayAmtToken1,
         uint256 amountLPRepay
     ) public {
-        RepayAmounts memory amtData = RepayAmounts(
+        RepayAmounts memory repayAmounts = RepayAmounts(
             amtLPTake,
             amtLPWithdraw,
             repayAmtToken0,
@@ -133,12 +133,11 @@ abstract contract HomoraFarmHandler {
         IHomoraBank(homoraBank).execute(
             positionID,
             relevantHomoraSpell,
-            abi.encodeWithSelector( // Encode the ABI header
-                //bytes4(keccak256(bytes('removeLiquidityWMasterChef(address,address,RepayAmounts)'))),
+            abi.encodeWithSelector(
                 IHomoraSushiSpell.removeLiquidityWMasterChef.selector,
                 token0,
                 token1,
-                amtData
+                repayAmounts
             )
         );
     }

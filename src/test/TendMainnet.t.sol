@@ -12,132 +12,62 @@ import {VyperTest} from "../../utils/VyperTest.sol";
 //import "../Token.sol";
 import {IHomoraBank} from "../interfaces/IHomoraBank.sol";
 import {IERC20} from "../interfaces/IERC20.sol";
+import {PositionSimulator} from "./PositionSimulator.t.sol";
 
-contract TendTest is ExtendedTest, VyperTest {
-    Strategy DNStrategy;
-    //Token vaultToken;
-    ConcaveOracle concaveOracle;
-    IVault vault;
-    IERC20 dai;
-
-    address homoraGov = 0xe142BAe2338D2c691C267B054b13d38Ce6aC5442;
-    address rewards = 0x0000000000000000000000000000000000000100; // Vault sends fee rewards here, Any wallet will do
-
-    address sushiSwapSpell = 0xDc9c7A2Bae15dD89271ae5701a6f4DB147BAa44C;
-    address router = 0xd9e1cE17f2641f24aE83637ab66a2cca9C378B9F; // SushiSwap router
-
-    address token0 = 0x6B175474E89094C44Da98b954EedeAC495271d0F; // DAI on ETH
-    address token1 = 0xC02aaA39b223FE8D0A0e5C4F27eAD9083C756Cc2; // WETH on ETH
-    uint farmLeverage = 20e17;
-    address lpToken = 0xC3D03e4F041Fd4cD388c549Ee2A29a9E5075882f; // DAI<>WETh LP on SushiSwap | OR MAYBE this is the WMasterChef
-
-    address keeper = 0x0000000000000000000000000000000000000003; // Our Bot keeper address
-    address mainnetDAI = 0x6B175474E89094C44Da98b954EedeAC495271d0F;
-    address mainnetEth = 0xC02aaA39b223FE8D0A0e5C4F27eAD9083C756Cc2; // WETH on ETH
-    address mainnetChainlinkRegistry = 0x47Fb2585D2C56Fe188D0E6ec628a38b74fCeeeDf;
-
-
-    uint pid = 2; 
-    address daiWhale = 0x5d3a536E4D6DbD6114cc1Ead35777bAB948E3643;
+contract TendTest is ExtendedTest, VyperTest, PositionSimulator {
+    uint farmLeverage = 15e17;
 
     function setUp() public {
-        //vaultToken = new Token();
-        concaveOracle = new ConcaveOracle();
-
-        address hBankAddress = 0xba5eBAf3fc1Fcca67147050Bf80462393814E54B;
-        IHomoraBank hBank = IHomoraBank(hBankAddress);
-        dai = IERC20(mainnetDAI);
-
-        //string memory vaultArtifact = "artifacts/Vault.json";
-        //address _vaultAddress = deployCode(vaultArtifact);
-        //VyperDeployer vyperDeployer = new VyperDeployer();
-        vault = IVault(
-            //vyperDeployer.deployContract("Vault", abi.encode())
-            //_vaultAddress
-            deployContract("/Users/ran/Project/concave/vyper-concave-vault/src/vyper_contracts/Vault.vy")
+        super.setUpPositionSimulator(
+            farmLeverage
         );
-
-        string memory _name = 'CVault';
-        string memory _symbol = 'vCNV';
-        vault.initialize(
-            mainnetDAI,
-            address(this),
-            rewards,
-            _name,
-            _symbol//,
-            //_guardian,
-            //_management
-        );
-        
-        DNStrategy = new Strategy(
-            address(vault),
-            hBankAddress,
-            sushiSwapSpell,
-            router,
-            token1,
-            farmLeverage,
-            address(concaveOracle),
-            lpToken,
-            pid,
-            mainnetEth
-        );
-
-        vault.addStrategy(
-            address(DNStrategy), 
-            10000, // debtRatio
-            0, // _minDebtPerHarvest 
-            type(uint256).max, // _maxDebtPerHarvest 
-            0  // performanceFee
-        );
-
-        address[] memory users = new address[](1);
-        users[0] = address(DNStrategy);
-
-        bool[] memory userStatus = new bool[](users.length);
-        for (uint i = 0; i < users.length; i++) {
-            userStatus[i] = true;
-        }
-
-        vm.prank(homoraGov);
-        hBank.setWhitelistUsers(users, userStatus);
-
     }
 
-    /*
-    uint _longPositionId = 1;
-    uint _shortPositionId = 2;
-
-    uint _mockHarvestAmount = 0;
-    uint _longPositionEquityETH = 2e18;
-    uint _longPositionLoanETH = 3e18;
-    uint _shortPositionEquityETH = 8e17;
-    uint _shortPositionLoanETH = 3e18; 
-    uint _longLPAmount = 2e18;
-    uint _shortLPAmount = 2e18;
-
-    uint _longPositionDebtToken0 = 20e18;
-    uint _shortPositionDebtToken1 = 3e18;
-    */
-
-    function setupPosition() public {
-        vault.setDepositLimit(90000e18); // This contract is the vault governor
-
-        // Deposit token to vault
-        uint amount = 1000 ether;
-        vm.startPrank(daiWhale);
-        dai.approve(address(vault), type(uint256).max);
-        vault.deposit(amount);
-        vm.stopPrank();
-
-        emit log_uint(dai.balanceOf(address(vault)));
-        // Get the tokens into the strategy 
-        DNStrategy.harvest(); 
-    }
-
-
+    // Test the tend function 
     function test_mainnetTend() public {
         setupPosition();
 
+        (uint longPositionId, uint shortPositionId) = DNStrategy.getPositionIds();
+        
+        emit log_uint(longPositionId);
+        emit log_uint(shortPositionId);
+
+        uint longEquityAdd = 500 ether; // Units of DAI
+        uint shortEquityAdd = 1000 ether; // Units of DAI
+        uint longLoanAdd = 100 ether; // Units of DAI
+        uint shortLoanAdd = 1e17; // Units of ETH
+        
+        addToDNPositions(
+            longPositionId,
+            shortPositionId,
+            longEquityAdd,
+            shortEquityAdd,
+            longLoanAdd,
+            shortLoanAdd
+        );
+/*
+        uint amtLpTake = 1e16;
+        uint amtLpWithdraw = 1e16;
+        uint amtRepayToken0 = 0;
+        uint amtRepayToken1 = 0;
+        uint amountLpRepay = 0;
+
+        removeFromDNPositions(
+            positionId, 
+            amtLpTake, // Convert To Units of DAI
+            amtLpWithdraw,
+            amtRepayToken0, // Convert To Units of DAI
+            amtRepayToken1, // Convert To Units of DAI
+            amountLpRepay 
+        ); 
+        
+        emit log_uint(88888888888888);*/ 
+
+        //DNStrategy.tend(false); 
+
+        // Override mode could liquidate everything into LP tokens - 
+        // Then, it would put them back into balanced positions
+        
         // Test the Override Mode
         //DNStrategy.tend(true);
         /*
@@ -156,6 +86,9 @@ contract TendTest is ExtendedTest, VyperTest {
     }
 
 
+    function test_setupVault() public {
+        emit log_address(address(vault));
+    }
 
 /*
     /// Test Operations
@@ -239,30 +172,3 @@ contract TendTest is ExtendedTest, VyperTest {
 */ 
 }
 
-
-
-contract ConcaveOracle {
-    function getETHPx(address token) external view returns (uint256) {
-        return 1e18;
-    }
-
-    function getPrice(address token0, address tokenUnit)
-        external
-        view
-        returns (uint256, uint256)
-    {   
-        // For the tests it's either DAI - ETH | or ETH - DAI
-        if (token0 == 0x6B175474E89094C44Da98b954EedeAC495271d0F) { // DAI
-            return (588e12, 0); 
-        } else if (token0 == 0xC02aaA39b223FE8D0A0e5C4F27eAD9083C756Cc2 && tokenUnit == 0x6B175474E89094C44Da98b954EedeAC495271d0F) { // WETH - DAI
-            return (1700e18, 0); 
-        }
-        else {
-            return (1e18, 0); 
-        }
-    }
-
-    function support(address token) external view returns (bool) {
-        return true;
-    }
-}
