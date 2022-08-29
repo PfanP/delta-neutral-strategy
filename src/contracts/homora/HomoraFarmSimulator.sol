@@ -286,4 +286,10 @@ abstract contract HomoraFarmSimulator {
         IBaseOracle oracle = IBaseOracle(IHomoraBank(homoraBank).oracle());
         return oracle.getETHPx(token);
     }
+
+    /// @dev Set farm token
+    /// @param token The farm token
+    function setFarmToken(address token) external {
+        farmToken = token;
+    }
 }

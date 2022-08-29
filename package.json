@@ -1,4 +1,9 @@
 {
+  "description": "Concave Delta Neutral Backend Repository",
+  "version": "1.0.0",
+  "scripts": {
+    "deploy:mock": "npx hardhat run scripts/deployMockContracts.js"
+  },
   "dependencies": {
     "@chainlink/contracts": "^0.4.2",
     "@nomiclabs/hardhat-ethers": "^2.1.0",
