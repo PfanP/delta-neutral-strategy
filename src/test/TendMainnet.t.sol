@@ -143,11 +143,11 @@ contract TendTest is ExtendedTest, VyperTest {
             amtRepayToken0, // Convert To Units of DAI
             amtRepayToken1, // Convert To Units of DAI
             amountLpRepay 
-        ); */ 
+        ); 
         
-        emit log_uint(88888888888888);
+        emit log_uint(88888888888888);*/ 
 
-        //DNStrategy.tend(false); 
+        DNStrategy.tend(false); 
 
         // Override mode could liquidate everything into LP tokens - 
         // Then, it would put them back into balanced positions
