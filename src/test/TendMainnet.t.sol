@@ -47,14 +47,13 @@ contract TendTest is ExtendedTest, VyperTest {
         IHomoraBank hBank = IHomoraBank(hBankAddress);
         dai = IERC20(mainnetDAI);
 
-        //string memory vaultArtifact = "artifacts/Vault.json";
-        //address _vaultAddress = deployCode(vaultArtifact);
+        string memory vaultArtifact = "precompiled/Vault.json";
+        address _vaultCompiled = deployCode(vaultArtifact);
         //VyperDeployer vyperDeployer = new VyperDeployer();
-        
         vault = IVault(
             //vyperDeployer.deployContract("Vault", abi.encode())
-            //_vaultAddress
-            deployContract("src/vyper_contracts/Vault.vy")
+            _vaultCompiled
+            //deployContract("src/vyper_contracts/Vault.vy")
         ); 
 
         string memory _name = 'CVault';
@@ -102,6 +101,74 @@ contract TendTest is ExtendedTest, VyperTest {
         hBank.setWhitelistUsers(users, userStatus);
 
     }
+
+    function test_setupVault() public {
+        emit log_address(address(vault));
+    }
+
+
+    function test_mainnetTend() public {
+        setupPosition();
+
+        (uint longPositionId, uint shortPositionId) = DNStrategy.getPositionIds();
+        
+        emit log_uint(longPositionId);
+        emit log_uint(shortPositionId);
+
+        uint longEquityAdd = 500 ether; // Units of DAI
+        uint shortEquityAdd = 1000 ether; // Units of DAI
+        uint longLoanAdd = 100 ether; // Units of DAI
+        uint shortLoanAdd = 1e17; // Units of ETH
+        
+        addToDNPositions(
+            longPositionId,
+            shortPositionId,
+            longEquityAdd,
+            shortEquityAdd,
+            longLoanAdd,
+            shortLoanAdd
+        );
+/*
+        uint amtLpTake = 1e16;
+        uint amtLpWithdraw = 1e16;
+        uint amtRepayToken0 = 0;
+        uint amtRepayToken1 = 0;
+        uint amountLpRepay = 0;
+
+        removeFromDNPositions(
+            longPositionId, 
+            shortPositionId,
+            amtLpTake, // Convert To Units of DAI
+            amtLpWithdraw,
+            amtRepayToken0, // Convert To Units of DAI
+            amtRepayToken1, // Convert To Units of DAI
+            amountLpRepay 
+        ); */ 
+        
+        emit log_uint(88888888888888);
+
+        //DNStrategy.tend(false); 
+
+        // Override mode could liquidate everything into LP tokens - 
+        // Then, it would put them back into balanced positions
+        
+        // Test the Override Mode
+        //DNStrategy.tend(true);
+        /*
+        (
+            uint longLpRemove,
+            uint longLpLoanPayback,
+            uint shortLpRemove,
+            uint shortLpLoanPayback,
+            uint action3LpTokenBal,
+            uint longLoanIncrase,
+            uint shortLoanIncrease) = 
+        DNStrategy.tend(false);
+        
+        emit log_uint(longLpRemove);
+        */ 
+    }
+
 
     function setupPosition() public {
         vault.setDepositLimit(90000e18); // This contract is the vault governor
@@ -200,68 +267,6 @@ contract TendTest is ExtendedTest, VyperTest {
         );
 
     } 
-
-    function test_mainnetTend() public {
-        setupPosition();
-
-        (uint longPositionId, uint shortPositionId) = DNStrategy.getPositionIds();
-        
-        emit log_uint(longPositionId);
-        emit log_uint(shortPositionId);
-
-        uint longEquityAdd = 500 ether; // Units of DAI
-        uint shortEquityAdd = 1000 ether; // Units of DAI
-        uint longLoanAdd = 100 ether; // Units of DAI
-        uint shortLoanAdd = 1e17; // Units of ETH
-        
-        addToDNPositions(
-            longPositionId,
-            shortPositionId,
-            longEquityAdd,
-            shortEquityAdd,
-            longLoanAdd,
-            shortLoanAdd
-        );
-
-        uint amtLpTake = 1e16;
-        uint amtLpWithdraw = 1e16;
-        uint amtRepayToken0 = 0;
-        uint amtRepayToken1 = 0;
-        uint amountLpRepay = 0;
-
-        removeFromDNPositions(
-            longPositionId, 
-            shortPositionId,
-            amtLpTake, // Convert To Units of DAI
-            amtLpWithdraw,
-            amtRepayToken0, // Convert To Units of DAI
-            amtRepayToken1, // Convert To Units of DAI
-            amountLpRepay 
-        ); 
-        
-        emit log_uint(88888888888888);
-
-        //DNStrategy.tend(false); 
-
-        // Override mode could liquidate everything into LP tokens - 
-        // Then, it would put them back into balanced positions
-        
-        // Test the Override Mode
-        //DNStrategy.tend(true);
-        /*
-        (
-            uint longLpRemove,
-            uint longLpLoanPayback,
-            uint shortLpRemove,
-            uint shortLpLoanPayback,
-            uint action3LpTokenBal,
-            uint longLoanIncrase,
-            uint shortLoanIncrease) = 
-        DNStrategy.tend(false);
-        
-        emit log_uint(longLpRemove);
-        */ 
-    }
 
 
 
