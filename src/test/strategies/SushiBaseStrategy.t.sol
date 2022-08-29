@@ -20,18 +20,18 @@ import { IVault } from "../../interfaces/IVault.sol";
 /// Sushi Masterchef: 0xc2EdaD668740f1aA35E4D8f227fB8E17dcA888Cd
 /// Sushiswap router: 0xd9e1cE17f2641f24aE83637ab66a2cca9C378B9F
 string constant vaultArtifact = "artifacts/Vault.json";
-uint256 constant PID = 305;
+uint256 constant PID = 0;
 
 contract SushiBaseStrategyTest is ExtendedTest {
     VyperDeployer vyperDeployer = new VyperDeployer();
-    address synLP = 0x4A86C01d67965f8cB3d0AAA2c655705E64097C31;
-    address sushi = 0x6B3595068778DD592e39A122f4f5a5cF09C90fE2;
-    address weth  = 0xC02aaA39b223FE8D0A0e5C4F27eAD9083C756Cc2;
-    address syn   = 0x0f2D719407FdBeFF09D87557AbB7232601FD9F29;
-    address masterChef = address(0xc2EdaD668740f1aA35E4D8f227fB8E17dcA888Cd);
-    address router = address(0xd9e1cE17f2641f24aE83637ab66a2cca9C378B9F);
+    address synLP = 0xc4e595acDD7d12feC385E5dA5D43160e8A0bAC0E;
+    address sushi = 0x0b3F868E0BE5597D5DB7fEB59E1CADBb0fdDa50a;
+    address weth  = 0x7ceB23fD6bC0adD59E62ac25578270cFf1b9f619;
+    address syn   = 0x0d500B1d8E8eF31E21C99d1Db9A6444d3ADf1270;
+    address masterChef = address(0x0769fd68dFb93167989C6f7254cd0D766Fb2841F);
+    address router = address(0x1b02dA8Cb0d097eB8D57A175b88c7D8b47997506);
 
-    address wethWhale = address(0x3D24C78ef79809DF43DaBAeaB1C14DB793Fc4d1f);
+    address wethWhale = address(0xC9CbB5B3eA986375E28dD0e8E129179f643b8D7B);
     Strategy sushiStrategy;
 
     using SafeERC20 for IERC20;

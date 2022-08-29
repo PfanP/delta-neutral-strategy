@@ -4,9 +4,9 @@ pragma solidity ^0.8.0;
 
 interface IMasterChef {
     // ===== Write =====
-    function deposit(uint256 _pid, uint256 _amount) external;
+    function deposit(uint256 _pid, uint256 _amount, address to) external;
 
-    function withdraw(uint256 _pid, uint256 _amount) external;
+    function withdraw(uint256 pid, uint256 amount, address to) external;
 
     function withdrawAndHarvest(
         uint256 _pid,
@@ -25,4 +25,9 @@ interface IMasterChef {
         external 
         view 
         returns (address, uint256, uint256, uint256);
+
+    function lpToken(uint256 _pid)
+        external
+        view
+        returns (address);
 }

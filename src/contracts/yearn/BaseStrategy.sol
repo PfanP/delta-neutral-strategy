@@ -792,6 +792,7 @@ abstract contract BaseStrategy {
         // which is the amount it has earned since the last time it reported to
         // the Vault.
         uint256 totalDebt = vault.strategies(address(this)).totalDebt;
+
         debtOutstanding = vault.report(profit, loss, debtPayment);
 
         // Check if free returns are left, and re-invest them

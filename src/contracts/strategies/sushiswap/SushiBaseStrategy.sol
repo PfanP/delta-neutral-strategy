@@ -12,14 +12,14 @@ import { IUniswapV2Pair }             from "../../../interfaces/uniswap/IUniswap
 /// @notice This is a base strategy for the SushiSwap
 /// @dev LP token farming contract
 /// @author Khanh 
-contract Strategy is BaseStrategy {
+contract SushiBaseStrategy is BaseStrategy {
     using SafeERC20 for IERC20;
 
     /// Constant variables for LP management
     /// @dev V1 - Can it be internal?
-    IERC20 public constant reward = IERC20(0x6B3595068778DD592e39A122f4f5a5cF09C90fE2); //The token we farm(Sushi)
-    IMasterChef public constant MASTERCHEF = IMasterChef(0xc2EdaD668740f1aA35E4D8f227fB8E17dcA888Cd);
-    IUniswapRouter public constant ROUTER = IUniswapRouter(0xd9e1cE17f2641f24aE83637ab66a2cca9C378B9F); // SwapRouter Address
+    IERC20 public constant reward = IERC20(0x0b3F868E0BE5597D5DB7fEB59E1CADBb0fdDa50a); //The token we farm(Sushi)
+    IMasterChef public constant MASTERCHEF = IMasterChef(0x0769fd68dFb93167989C6f7254cd0D766Fb2841F);
+    IUniswapRouter public constant ROUTER = IUniswapRouter(0x1b02dA8Cb0d097eB8D57A175b88c7D8b47997506); // SwapRouter Address
 
     /// @dev id of the staking pool
     uint256 internal immutable pid; // Pool ID
@@ -27,7 +27,7 @@ contract Strategy is BaseStrategy {
     address internal immutable token0; // token0 for want(LP) token
     address internal immutable token1; // token1 for want(LP) token
     ///@dev could be want token, or LP token to be used for sushi masterchef
-
+    event Test(uint);
     //////////////////////////////////////////////////////////////////////
     // CONSTRUCTION
     //////////////////////////////////////////////////////////////////////
@@ -46,8 +46,9 @@ contract Strategy is BaseStrategy {
         profitFactor = 1500;
         debtThreshold = 1_000_000 * 1e18;
 
-        (address poolToken, , , ) = MASTERCHEF.poolInfo(pid);
-        
+        /// @dev: original code
+        // (address poolToken, , , ) = MASTERCHEF.poolInfo(pid);
+        address poolToken = MASTERCHEF.lpToken(pid);
         want = IERC20(poolToken);
 
         want.safeApprove(address(MASTERCHEF), type(uint256).max);
@@ -105,7 +106,7 @@ contract Strategy is BaseStrategy {
         )
     {
         /// @dev harvest sushi token
-        MASTERCHEF.withdraw(pid, 0);
+        MASTERCHEF.withdraw(pid, 0, address(this));
 
         uint256 assets = estimatedTotalAssets();
         uint256 toSwap = reward.balanceOf(address(this));
@@ -113,7 +114,7 @@ contract Strategy is BaseStrategy {
         uint256 profit = _swapToWant(toSwap);
         uint256 debt = vault.strategies(address(this)).totalDebt;
         uint256 wantBal = want.balanceOf(address(this));
-
+    
         if (assets > debt) {
             _debtPayment = _debtOutstanding;
             _profit = assets - debt;
@@ -149,7 +150,8 @@ contract Strategy is BaseStrategy {
         uint256 _preWant = want.balanceOf(address(this));
         if (_preWant > _debtOutstanding) {
             uint256 toDeposit = _preWant - _debtOutstanding;
-            MASTERCHEF.deposit(pid, toDeposit);
+            emit Test(_preWant);
+            MASTERCHEF.deposit(pid, toDeposit, address(this));
         }
     }
 
@@ -172,7 +174,7 @@ contract Strategy is BaseStrategy {
             }
 
             if (deposited > 0) {
-                MASTERCHEF.withdraw(pid, _toWithdraw);
+                MASTERCHEF.withdraw(pid, _toWithdraw, address(this));
             }
             // Note: Withdrawl process will earn rewards, this will be deposited into SushiBar on next adjustPositions()
             _liquidatedAmount = want.balanceOf(address(this));

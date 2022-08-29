@@ -11,29 +11,22 @@ module.exports = {
     settings: {
       optimizer: {
         enabled: true,
-        runs: 200
+        runs: 200,
       },
     },
   },
   paths: {
-    sources: "src",
+    sources: "./src/contracts",
     tests: "src/test",
     artifacts: "out",
   },
   networks: {
-    ropsten: {
-      url: process.env.ROPSTEN_ALCHEMY,
-      accounts: [process.env.PRIVATE_KEY],
-    },
-    rinkeby: {
-      url: process.env.RINKEBY_ALCHEMY,
-      accounts: [process.env.PRIVATE_KEY],
-    },
-    mainnet: {
-      url: process.env.MAINNET_ALCHEMY,
+    polygon: {
+      url: process.env.POLYGON_ALCHEMY,
       accounts: [process.env.PRIVATE_KEY],
     },
   },
+  ignoreFiles: ["./src/test/*", "./lib/*"],
   etherscan: {
     apiKey: process.env.ETHERSCAN_API_KEY,
   },
