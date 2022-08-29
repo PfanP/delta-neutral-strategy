@@ -102,11 +102,7 @@ contract TendTest is ExtendedTest, VyperTest {
 
     }
 
-    function test_setupVault() public {
-        emit log_address(address(vault));
-    }
-
-
+    // Test the tend function 
     function test_mainnetTend() public {
         setupPosition();
 
@@ -136,8 +132,7 @@ contract TendTest is ExtendedTest, VyperTest {
         uint amountLpRepay = 0;
 
         removeFromDNPositions(
-            longPositionId, 
-            shortPositionId,
+            positionId, 
             amtLpTake, // Convert To Units of DAI
             amtLpWithdraw,
             amtRepayToken0, // Convert To Units of DAI
@@ -169,7 +164,7 @@ contract TendTest is ExtendedTest, VyperTest {
         */ 
     }
 
-
+    ///////// Position Management Tools ////////////////
     function setupPosition() public {
         vault.setDepositLimit(90000e18); // This contract is the vault governor
 
@@ -200,7 +195,6 @@ contract TendTest is ExtendedTest, VyperTest {
         vm.prank(daiWhale);
         dai.transfer(address(DNStrategy),longEquityAdd);
 
-        uint beforeEquityAdd = DNStrategy.getCollateralETHValue(longPositionId);
         DNStrategy.openOrIncreasePositionSushiswap(
                 longPositionId, 
                 token0,
@@ -213,13 +207,8 @@ contract TendTest is ExtendedTest, VyperTest {
                 pid 
         );
 
-        emit log_uint(1234);
-        emit log_uint(beforeEquityAdd);
-        emit log_uint(DNStrategy.getCollateralETHValue(longPositionId));
-
         vm.prank(daiWhale);
         dai.transfer(address(DNStrategy),shortEquityAdd);
-        uint beforeShortPositionAdd = DNStrategy.getCollateralETHValue(shortPositionId);
         
         DNStrategy.openOrIncreasePositionSushiswap(
             shortPositionId, 
@@ -232,31 +221,21 @@ contract TendTest is ExtendedTest, VyperTest {
             shortLoanAdd, // Borrow only Token 1
             pid 
         );  
-
-        emit log_uint(5678);
-        emit log_uint(beforeShortPositionAdd);
-        emit log_uint(DNStrategy.getCollateralETHValue(shortPositionId));
-
     }
 
     function removeFromDNPositions(
-        uint longPositionId, 
-        uint shortPositionId,
+        uint positionId, 
         uint amtLpTake, // Convert To Units of DAI
         uint amtLpWithdraw,
         uint amtRepayToken0, // Convert To Units of DAI
         uint amtRepayToken1, // Convert To Units of DAI
         uint amountLpRepay // Convert To Units of ETH
     ) public {
-
-        //vm.prank(daiWhale);
-        //dai.transfer(address(DNStrategy),100);
-        (,,,uint lpAmount) = DNStrategy.getPositionInfo(longPositionId);
-        emit log_uint(1234);
+        (,,,uint lpAmount) = DNStrategy.getPositionInfo(positionId);
         emit log_uint(lpAmount);
 
         DNStrategy.reducePositionSushiswap(
-            longPositionId,
+            positionId,
             token0,
             token1,
             amtLpTake,
@@ -265,10 +244,11 @@ contract TendTest is ExtendedTest, VyperTest {
             amtRepayToken1, // amt repay token1
             amountLpRepay   // amount Lp repay
         );
-
     } 
 
-
+    function test_setupVault() public {
+        emit log_address(address(vault));
+    }
 
 /*
     /// Test Operations
